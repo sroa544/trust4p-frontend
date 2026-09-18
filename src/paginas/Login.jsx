@@ -20,7 +20,6 @@ export default function Login() {
     <main className="w-full flex-1 flex flex-col justify-center items-center p-margin-mobile lg:p-margin">
       <div className="flex flex-col w-full max-w-[1440px] mx-auto text-on-surface">
 
-        {/* HERO */}
         <section className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center py-6 lg:py-12">
 
           <div className="lg:col-span-7 flex flex-col items-start gap-6">
@@ -83,7 +82,6 @@ export default function Login() {
             </div>
           </div>
 
-          {/* TARJETA DE ACCESO */}
           <div className="lg:col-span-5 w-full flex justify-center lg:justify-end">
             <div className="w-full max-w-md bg-surface-container-lowest rounded-2xl shadow-xl p-6 sm:p-8 relative overflow-hidden">
               <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-secondary-container via-tertiary-fixed-dim to-primary"></div>
@@ -182,7 +180,6 @@ export default function Login() {
           </div>
         </section>
 
-        {/* DIMENSIONES 4P */}
         <section className="w-full py-12 sm:py-16">
           <div className="flex flex-col items-start gap-2 mb-10">
             <div className="flex items-center gap-2">
@@ -272,7 +269,6 @@ export default function Login() {
           </div>
         </section>
 
-        {/* ESCALA DE MADUREZ */}
         <section className="w-full py-12 sm:py-16 bg-surface-container-low rounded-2xl p-6 sm:p-10 mb-12">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
             <div className="flex flex-col gap-2">
@@ -371,7 +367,6 @@ export default function Login() {
           </div>
         </section>
 
-        {/* LLAMADO A LA ACCIÓN */}
         <section className="w-full bg-gradient-to-r from-primary via-primary-container to-secondary rounded-2xl p-8 sm:p-12 text-on-primary shadow-xl mb-6 relative overflow-hidden">
           <div className="absolute -right-16 -bottom-16 w-80 h-80 rounded-full bg-secondary-container/20 blur-3xl pointer-events-none"></div>
           <div className="absolute -left-16 -top-16 w-80 h-80 rounded-full bg-tertiary-fixed-dim/15 blur-3xl pointer-events-none"></div>
@@ -401,7 +396,6 @@ export default function Login() {
           </div>
         </section>
 
-        {/* PIE */}
         <footer className="w-full py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-outline font-body-sm text-body-sm">
           <div className="flex items-center gap-3">
             <span>Trust 4P — Identidad visual 2026</span>
