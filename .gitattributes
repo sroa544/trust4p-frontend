@@ -1,0 +1,14 @@
+# Normaliza los finales de linea del repositorio.
+# Git guarda siempre LF y entrega LF al disco, sin importar el sistema
+# operativo ni el editor con el que se cree el archivo.
+* text=auto eol=lf
+
+# Binarios: no se tocan.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.pdf binary
