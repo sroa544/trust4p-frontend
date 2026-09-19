@@ -5,7 +5,8 @@ import Registro from './paginas/Registro.jsx'
 import Panel from './paginas/Panel.jsx'
 import Diagnostico from './paginas/Diagnostico.jsx'
 import InformeResultados from './paginas/InformeResultados.jsx'
-import Historial from './paginas/Historial.jsx'
+import PlanEstrategico from './paginas/PlanEstrategico.jsx'
+import EvolucionHistorica from './paginas/EvolucionHistorica.jsx'
 
 export default function App() {
   return (
@@ -16,7 +17,8 @@ export default function App() {
       <Route path="/panel" element={<Panel />} />
       <Route path="/diagnostico" element={<Diagnostico />} />
       <Route path="/resultados/:id" element={<InformeResultados />} />
-      <Route path="/historial" element={<Historial />} />
+      <Route path="/plan/:id" element={<PlanEstrategico />} />
+      <Route path="/historial" element={<EvolucionHistorica />} />
     </Routes>
   )
 }
