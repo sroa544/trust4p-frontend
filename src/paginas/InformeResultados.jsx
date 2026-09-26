@@ -390,25 +390,57 @@ export default function InformeResultados() {
             </div>
           </div>
 
+          <p className="font-body-md text-body-md text-on-surface-variant max-w-3xl">
+            El diagnostico identifico {informe.recomendaciones.length} lineas de
+            trabajo prioritarias. El detalle de cada una, su esfuerzo estimado y
+            el efecto proyectado sobre el indice forman parte del plan de mejora.
+          </p>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-space-md">
             {informe.recomendaciones.map((r) => (
-              <div key={r.id} className="bg-surface-container-lowest p-4 rounded-lg flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-label-caps text-label-caps text-primary font-bold">{r.dimension}</span>
-                    <span className="font-label-caps text-label-caps bg-surface-container text-on-surface px-2 py-0.5 rounded">
-                      Impacto {r.impacto}
-                    </span>
-                  </div>
-                  <h5 className="font-headline-sm text-headline-sm text-on-surface mb-1">{r.titulo}</h5>
-                  <p className="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">{r.descripcion}</p>
+              <div
+                key={r.id}
+                className="relative bg-surface-container-lowest p-4 rounded-lg overflow-hidden"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-label-caps text-label-caps text-primary font-bold">
+                    {r.dimension}
+                  </span>
+                  <span className="material-symbols-outlined text-outline text-lg">lock</span>
                 </div>
-                <div className="mt-4 pt-3 flex items-center justify-between font-label-md text-label-md text-outline">
-                  <span>Esfuerzo: {r.esfuerzoSemanas} semanas</span>
-                  <span className="text-primary font-semibold">{r.efecto}</span>
+
+                <h5 className="font-headline-sm text-headline-sm text-on-surface mb-2">
+                  {r.titulo}
+                </h5>
+
+                <div className="flex flex-col gap-2" aria-hidden="true">
+                  <span className="block h-2.5 rounded bg-surface-container w-full" />
+                  <span className="block h-2.5 rounded bg-surface-container w-11/12" />
+                  <span className="block h-2.5 rounded bg-surface-container w-3/4" />
                 </div>
               </div>
             ))}
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-space-md pt-space-sm">
+            <span className="font-body-sm text-body-sm text-on-surface-variant">
+              El informe y los puntajes por dimension no tienen costo.
+            </span>
+
+            <div className="flex flex-col items-start sm:items-end gap-1">
+              <button
+                className="inline-flex items-center justify-center gap-space-xs px-space-lg py-3 rounded-lg bg-primary text-on-primary font-label-lg shadow-sm opacity-60 cursor-not-allowed"
+                disabled
+                type="button"
+              >
+                <span className="material-symbols-outlined text-lg">lock_open</span>
+                Adquirir el plan de mejora
+              </button>
+
+              <span className="font-label-md text-label-md text-on-surface-variant">
+                Disponible en una version posterior
+              </span>
+            </div>
           </div>
         </section>
       </div>
