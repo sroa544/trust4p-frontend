@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 
+import AsistenteChat from './componentes/AsistenteChat.jsx'
 import Login from './paginas/Login.jsx'
 import Registro from './paginas/Registro.jsx'
 import Panel from './paginas/Panel.jsx'
@@ -12,17 +13,21 @@ import GestionCalibracion from './paginas/GestionCalibracion.jsx'
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Navigate to="/login" />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/registro" element={<Registro />} />
-      <Route path="/panel" element={<Panel />} />
-      <Route path="/diagnostico" element={<Diagnostico />} />
-      <Route path="/resultados/:id" element={<InformeResultados />} />
-      <Route path="/plan/:id" element={<PlanEstrategico />} />
-      <Route path="/auditoria" element={<PanelAuditoria />} />
-      <Route path="/historial" element={<EvolucionHistorica />} />
-      <Route path="/gestion" element={<GestionCalibracion />} />
-    </Routes>
+    <>
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/registro" element={<Registro />} />
+        <Route path="/panel" element={<Panel />} />
+        <Route path="/diagnostico" element={<Diagnostico />} />
+        <Route path="/resultados/:id" element={<InformeResultados />} />
+        <Route path="/plan/:id" element={<PlanEstrategico />} />
+        <Route path="/auditoria" element={<PanelAuditoria />} />
+        <Route path="/historial" element={<EvolucionHistorica />} />
+        <Route path="/gestion" element={<GestionCalibracion />} />
+      </Routes>
+
+      <AsistenteChat />
+    </>
   )
 }
