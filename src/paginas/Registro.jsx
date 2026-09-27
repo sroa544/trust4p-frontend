@@ -14,20 +14,17 @@ const INVITACION = {
   rol: 'Sponsor de Innovación',
 }
 
+// Estado inicial: todavia no se ha escrito nada, no es una valoracion.
+const SIN_CLAVE = { texto: 'Pendiente', color: 'text-outline', relleno: 'bg-transparent', ancho: '0%' }
+
+// El indice corresponde a la cantidad de criterios cumplidos (0 a 4).
+// Con cero criterios se muestra un tramo minimo para que haya senal visual.
 const NIVELES_CLAVE = [
-  { texto: 'Pendiente', color: 'text-outline', barras: [] },
-  { texto: 'Baja', color: 'text-error', barras: ['bg-error'] },
-  { texto: 'Media', color: 'text-secondary', barras: ['bg-secondary', 'bg-secondary'] },
-  {
-    texto: 'Robusta',
-    color: 'text-secondary',
-    barras: ['bg-secondary-fixed-dim', 'bg-secondary-fixed-dim', 'bg-secondary'],
-  },
-  {
-    texto: 'Excelente',
-    color: 'text-tertiary',
-    barras: ['bg-tertiary-fixed-dim', 'bg-tertiary-fixed-dim', 'bg-tertiary-container', 'bg-tertiary'],
-  },
+  { texto: 'Muy baja', color: 'text-error', relleno: 'bg-error', ancho: '10%' },
+  { texto: 'Baja', color: 'text-error', relleno: 'bg-error', ancho: '25%' },
+  { texto: 'Media', color: 'text-secondary', relleno: 'bg-secondary', ancho: '50%' },
+  { texto: 'Robusta', color: 'text-secondary', relleno: 'bg-secondary-fixed-dim', ancho: '75%' },
+  { texto: 'Excelente', color: 'text-tertiary', relleno: 'bg-tertiary', ancho: '100%' },
 ]
 
 function evaluarClave(clave) {
@@ -49,7 +46,7 @@ export default function Registro() {
 
   const criterios = evaluarClave(clave)
   const puntaje = Object.values(criterios).filter(Boolean).length
-  const nivel = clave.length === 0 ? NIVELES_CLAVE[0] : NIVELES_CLAVE[puntaje]
+  const nivel = clave.length === 0 ? SIN_CLAVE : NIVELES_CLAVE[puntaje]
 
   const listaCriterios = [
     { cumple: criterios.longitud, texto: 'Mínimo 8 caracteres' },
@@ -310,10 +307,18 @@ export default function Registro() {
                     <span className="text-on-surface-variant font-medium">Seguridad de la contraseña:</span>
                     <span className={`font-bold ${nivel.color}`}>{nivel.texto}</span>
                   </div>
-                  <div className="w-full h-1.5 bg-surface-variant rounded-full overflow-hidden flex">
-                    {[0, 1, 2, 3].map((i) => (
-                      <div key={i} className={`h-full w-1/4 transition-all duration-300 ${nivel.barras[i] || 'bg-transparent'}`}></div>
-                    ))}
+                  <div
+                    aria-label={`Seguridad de la contraseña: ${nivel.texto}`}
+                    aria-valuemax={4}
+                    aria-valuemin={0}
+                    aria-valuenow={clave.length === 0 ? 0 : puntaje}
+                    className="w-full h-1.5 bg-surface-variant rounded-full overflow-hidden"
+                    role="progressbar"
+                  >
+                    <div
+                      className={`h-full rounded-full transition-all duration-300 ${nivel.relleno}`}
+                      style={{ width: nivel.ancho }}
+                    />
                   </div>
                   <div className="grid grid-cols-2 gap-1 font-body-sm text-[11px]">
                     {listaCriterios.map((criterio) => (
