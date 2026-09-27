@@ -20,6 +20,18 @@ export default function Panel() {
           </span>
         </div>
 
+        <div className="w-full flex items-center justify-between gap-space-md mb-space-md">
+          <img
+            alt="Trust 4P — De la visión a la solución"
+            className="h-9 w-auto object-contain"
+            src="/logo-trust4p.png"
+          />
+
+          <span className="font-label-caps text-label-caps text-on-surface-variant">
+            Índice de madurez de innovación
+          </span>
+        </div>
+
         <header className="w-full bg-surface-container-lowest rounded-xl p-space-lg shadow-sm mb-space-lg">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-space-lg">
             <div className="flex items-center gap-space-md">
