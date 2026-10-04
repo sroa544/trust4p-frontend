@@ -1,19 +1,32 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import Aviso from '../componentes/Aviso.jsx'
+import { useSesion } from '../hooks/useSesion'
+import { mensajeDeError } from '../servicios/api'
 
 export default function Login() {
   const [verClave, setVerClave] = useState(false)
   const [correo, setCorreo] = useState('')
-  const [mensaje, setMensaje] = useState('')
+  const [clave, setClave] = useState('')
+  const [error, setError] = useState('')
+  const [enviando, setEnviando] = useState(false)
   const navigate = useNavigate()
+  const ubicacion = useLocation()
+  const { iniciarSesion } = useSesion()
 
-  function enviar(e) {
+  async function enviar(e) {
     e.preventDefault()
-    setMensaje(`Autenticando ${correo} en el ecosistema...`)
-    setTimeout(() => {
-      setMensaje('Acceso validado. Redireccionando al panel de diagnóstico.')
-      navigate('/panel')
-    }, 1200)
+    setError('')
+    setEnviando(true)
+    try {
+      await iniciarSesion(correo.trim(), clave)
+      navigate(ubicacion.state?.desde ?? '/panel', { replace: true })
+    } catch (falla) {
+      setError(mensajeDeError(falla))
+      setClave('')
+    } finally {
+      setEnviando(false)
+    }
   }
 
   return (
@@ -59,10 +72,10 @@ export default function Login() {
               <div className="bg-surface-container-lowest rounded-xl p-4 shadow-sm flex flex-col justify-between">
                 <div className="flex items-center gap-2 text-tertiary mb-2">
                   <span className="material-symbols-outlined text-headline-md">model_training</span>
-                  <span className="font-headline-lg text-headline-lg text-on-surface">TRIZ</span>
+                  <span className="font-headline-lg text-headline-lg text-on-surface">IA</span>
                 </div>
-                <p className="font-label-md text-label-md text-on-surface-variant font-medium">Diagnóstico &amp; Ruta</p>
-                <span className="font-body-sm text-body-sm text-outline mt-0.5">Resolución sistemática de contradicciones</span>
+                <p className="font-label-md text-label-md text-on-surface-variant font-medium">Diagnóstico &amp; Recomendaciones</p>
+                <span className="font-body-sm text-body-sm text-outline mt-0.5">Puntaje determinista con narrativa asistida por un agente</span>
               </div>
             </div>
 
@@ -73,7 +86,7 @@ export default function Login() {
               </div>
               <div className="flex items-center gap-1.5 font-label-md text-label-md">
                 <span className="material-symbols-outlined text-secondary text-body-md" style={{ fontVariationSettings: "'FILL' 1" }}>shield</span>
-                <span>Cumplimiento ISO / IEC 56002</span>
+                <span>Tratamiento de datos conforme a la Ley 1581 de 2012</span>
               </div>
               <div className="flex items-center gap-1.5 font-label-md text-label-md">
                 <span className="material-symbols-outlined text-tertiary text-body-md" style={{ fontVariationSettings: "'FILL' 1" }}>analytics</span>
@@ -99,9 +112,6 @@ export default function Login() {
               </div>
 
               <form className="flex flex-col gap-4" onSubmit={enviar}>
-                <input name="modelo_version" type="hidden" defaultValue="2026.1" />
-                <input name="diagnostico_id" type="hidden" defaultValue="DIAG-CORP-4P" />
-
                 <div className="flex flex-col gap-1.5">
                   <label className="font-label-lg text-label-lg text-on-surface flex items-center justify-between" htmlFor="correo">
                     <span>Correo corporativo</span>
@@ -125,7 +135,7 @@ export default function Login() {
                 <div className="flex flex-col gap-1.5">
                   <div className="flex items-center justify-between">
                     <label className="font-label-lg text-label-lg text-on-surface" htmlFor="clave">Contraseña</label>
-                    <a className="font-label-md text-label-md text-secondary hover:text-primary transition-colors font-medium" href="#recuperar">¿Olvidaste tu contraseña?</a>
+                    <Link className="font-label-md text-label-md text-secondary hover:text-primary transition-colors font-medium" to="/recuperar">¿Olvidaste tu contraseña?</Link>
                   </div>
                   <div className="relative flex items-center">
                     <span className="material-symbols-outlined absolute left-3.5 text-outline text-body-lg pointer-events-none">lock</span>
@@ -134,8 +144,11 @@ export default function Login() {
                       id="clave"
                       name="clave"
                       placeholder="••••••••••••"
+                      autoComplete="current-password"
                       required
                       type={verClave ? 'text' : 'password'}
+                      value={clave}
+                      onChange={(e) => setClave(e.target.value)}
                     />
                     <button
                       aria-label="Mostrar u ocultar clave"
@@ -150,30 +163,31 @@ export default function Login() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2.5 pt-1">
-                  <input className="w-4 h-4 rounded text-primary focus:ring-primary accent-primary cursor-pointer" id="recordar_sesion" name="recordar_sesion" type="checkbox" />
-                  <label className="font-label-md text-label-md text-on-surface-variant cursor-pointer select-none" htmlFor="recordar_sesion">
-                    Recordar sesión en este equipo de trabajo
-                  </label>
-                </div>
-
-                <button className="w-full mt-2 py-3 px-6 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-lg text-label-lg flex items-center justify-center gap-2 transition-all shadow-md active:scale-[0.99]" type="submit">
-                  <span>Ingresar al Panel de Innovación</span>
+                <button
+                  className="w-full mt-2 py-3 px-6 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-lg text-label-lg flex items-center justify-center gap-2 transition-all shadow-md active:scale-[0.99] disabled:opacity-60"
+                  disabled={enviando}
+                  type="submit"
+                >
+                  <span>{enviando ? 'Verificando…' : 'Ingresar al Panel de Innovación'}</span>
                   <span className="material-symbols-outlined text-body-md">arrow_forward</span>
                 </button>
 
-                {mensaje && (
-                  <div className="p-2.5 rounded-md bg-tertiary-fixed/40 text-tertiary font-label-md text-label-md text-center">
-                    {mensaje}
-                  </div>
-                )}
+                <Aviso className="text-center" tipo="error">{error}</Aviso>
+                <Aviso className="text-center" tipo="exito">{ubicacion.state?.aviso}</Aviso>
 
                 <div className="mt-4 pt-4 flex flex-col items-center gap-2 bg-surface-container-low p-3.5 rounded-xl text-center">
-                  <span className="font-label-md text-label-md text-on-surface-variant">¿Eres una empresa invitada o nuevo registro?</span>
-                  <a className="inline-flex items-center gap-1 font-label-lg text-label-lg text-secondary hover:text-primary font-semibold transition-colors" href="/registro">
-                    <span>Activar invitación corporativa</span>
-                    <span className="material-symbols-outlined text-sm">open_in_new</span>
-                  </a>
+                  <span className="font-label-md text-label-md text-on-surface-variant">¿Aún no tienes cuenta?</span>
+                  <Link className="inline-flex items-center gap-1 font-label-lg text-label-lg text-secondary hover:text-primary font-semibold transition-colors" to="/solicitar-acceso">
+                    <span>Solicitar acceso para mi empresa</span>
+                    <span className="material-symbols-outlined text-sm">how_to_reg</span>
+                  </Link>
+                  <Link className="inline-flex items-center gap-1 font-label-md text-label-md text-primary hover:text-secondary font-semibold transition-colors" to="/demo">
+                    <span>Probar el diagnóstico de demostración</span>
+                    <span className="material-symbols-outlined text-sm">quiz</span>
+                  </Link>
+                  <span className="font-body-sm text-body-sm text-outline">
+                    ¿Recibiste una invitación? Ábrela desde el enlace del correo.
+                  </span>
                 </div>
               </form>
             </div>
@@ -384,14 +398,14 @@ export default function Login() {
               </p>
             </div>
             <div className="lg:col-span-4 flex flex-col sm:flex-row lg:flex-col gap-3 justify-end items-stretch lg:items-end">
-              <button className="px-6 py-3.5 rounded-lg bg-surface-container-lowest text-primary hover:bg-surface-bright font-label-lg text-label-lg font-semibold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all" type="button">
-                <span className="material-symbols-outlined text-body-lg">calendar_today</span>
-                <span>Solicitar Demostración Guiada</span>
-              </button>
-              <a className="px-6 py-3 rounded-lg text-on-primary hover:bg-on-primary/10 font-label-md text-label-md flex items-center justify-center gap-2 text-center transition-colors" href="#metodologia">
-                <span>Conocer Metodología y Normas ISO</span>
+              <Link className="px-6 py-3.5 rounded-lg bg-surface-container-lowest text-primary hover:bg-surface-bright font-label-lg text-label-lg font-semibold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all" to="/solicitar-acceso">
+                <span className="material-symbols-outlined text-body-lg">how_to_reg</span>
+                <span>Solicitar acceso</span>
+              </Link>
+              <Link className="px-6 py-3 rounded-lg text-on-primary hover:bg-on-primary/10 font-label-md text-label-md flex items-center justify-center gap-2 text-center transition-colors" to="/demo">
+                <span>Probar la demostración</span>
                 <span className="material-symbols-outlined text-body-md">chevron_right</span>
-              </a>
+              </Link>
             </div>
           </div>
         </section>
