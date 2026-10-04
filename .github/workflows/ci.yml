@@ -30,24 +30,29 @@ jobs:
       - uses: actions/checkout@v4
       - name: Construir la imagen
         run: docker build -t trust4p-frontend:ci .
-      - name: Humo del proxy inverso (la imagen sirve la SPA y reenvía a un backend de prueba)
+      - name: Humo 1 - levantar backend de prueba y nginx
         run: |
           docker network create prueba
-          docker run -d --name backend --network prueba python:3.13-alpine \
-            python -m http.server 8000 --directory /tmp
-          docker run -d --name web --network prueba -p 8080:8080 \
-            -e PORT=8080 \
-            -e API_NEGOCIO_URL=http://backend:8000 \
-            -e API_AGENTE_URL=http://backend:8000 \
-            trust4p-frontend:ci
+          docker run -d --name backend --network prueba python:3.13-alpine             python -m http.server 8000 --directory /tmp
           docker exec backend sh -c 'echo respuesta-del-backend > /tmp/prueba.txt'
-          for i in $(seq 1 20); do curl -fs http://localhost:8080/salud && break; sleep 1; done
-          # La SPA responde en cualquier ruta del cliente.
-          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/panel)" = "200"
-          curl -s http://localhost:8080/panel | grep -qi "<div id=\"root\""
-          # /api/negocio/<ruta> y /api/agente/<ruta> llegan al backend sin el prefijo.
-          curl -s http://localhost:8080/api/negocio/prueba.txt | grep -q "respuesta-del-backend"
-          curl -s http://localhost:8080/api/agente/prueba.txt | grep -q "respuesta-del-backend"
+          docker run -d --name web --network prueba -p 8080:8080             -e PORT=8080             -e API_NEGOCIO_URL=http://backend:8000             -e API_AGENTE_URL=http://backend:8000             trust4p-frontend:ci
+          sleep 5
+          docker ps --format '{{.Names}} {{.Status}}'
+          test "$(docker inspect -f '{{.State.Running}}' web)" = "true"
+      - name: Humo 2 - nginx responde en /salud
+        run: curl --retry 10 --retry-delay 1 --retry-connrefused -fsS http://localhost:8080/salud
+      - name: Humo 3 - la SPA responde en rutas del cliente
+        run: |
+          curl -fsS http://localhost:8080/panel > panel.html
+          grep -qi '<div id="root"' panel.html
+      - name: Humo 4 - /api/negocio llega al backend sin el prefijo
+        run: |
+          curl -fsS http://localhost:8080/api/negocio/prueba.txt > negocio.txt
+          grep -q respuesta-del-backend negocio.txt
+      - name: Humo 5 - /api/agente llega al backend sin el prefijo
+        run: |
+          curl -fsS http://localhost:8080/api/agente/prueba.txt > agente.txt
+          grep -q respuesta-del-backend agente.txt
       - name: Registros de nginx (si falló)
         if: failure()
         run: docker logs web
