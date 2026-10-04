@@ -80,7 +80,9 @@ export function textoDeDetalle(detalle, estado) {
 }
 
 function construirUrl(base, ruta, consulta) {
-  const url = new URL(`${base}/v1${ruta}`)
+  // La base puede ser absoluta (desarrollo local) o relativa al origen del
+  // frontend (despliegue con proxy inverso: misma cookie y sin CORS).
+  const url = new URL(`${base}/v1${ruta}`, window.location.origin)
   Object.entries(consulta ?? {}).forEach(([clave, valor]) => {
     if (valor !== undefined && valor !== null && valor !== '') {
       url.searchParams.set(clave, String(valor))

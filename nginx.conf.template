@@ -1,0 +1,77 @@
+# Plantilla de nginx (las variables ${...} las sustituye la imagen oficial al
+# arrancar; las de nginx, como $uri, se dejan intactas).
+#
+# El navegador solo habla con este servidor:
+#   /                  -> aplicación (SPA)
+#   /api/negocio/...   -> trust4p-api-negocio   (${API_NEGOCIO_URL})
+#   /api/agente/...    -> trust4p-servicio-agente (${API_AGENTE_URL})
+
+# Los backends son URLs de Cloud Run: se resuelven por petición para tolerar
+# cambios de IP. NGINX_LOCAL_RESOLVERS lo calcula la imagen a partir del
+# /etc/resolv.conf del contenedor (el DNS de Cloud Run o el de Docker).
+resolver ${NGINX_LOCAL_RESOLVERS} valid=300s ipv6=off;
+
+server {
+    listen ${PORT};
+    server_name _;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    client_max_body_size 20m;
+
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "DENY" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
+
+    # Los archivos compilados llevan hash en el nombre: se pueden cachear sin límite.
+    location /assets/ {
+        try_files $uri =404;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        add_header X-Content-Type-Options "nosniff" always;
+    }
+
+    location /api/negocio/ {
+        set $destino_negocio ${API_NEGOCIO_URL};
+        rewrite ^/api/negocio/(.*)$ /$1 break;
+        proxy_pass $destino_negocio;
+        proxy_ssl_server_name on;
+        proxy_set_header Host $proxy_host;
+        # La IP de la persona la agrega el frontend de Google en
+        # X-Forwarded-For; se reenvía tal cual (la API toma la posición
+        # indicada en SALTOS_PROXY para su límite de peticiones por origen).
+        proxy_set_header X-Forwarded-For $http_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_read_timeout 300s;
+        proxy_send_timeout 300s;
+    }
+
+    location /api/agente/ {
+        set $destino_agente ${API_AGENTE_URL};
+        rewrite ^/api/agente/(.*)$ /$1 break;
+        proxy_pass $destino_agente;
+        proxy_ssl_server_name on;
+        proxy_set_header Host $proxy_host;
+        proxy_set_header X-Forwarded-For $http_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_read_timeout 300s;
+        proxy_send_timeout 300s;
+    }
+
+    # Aplicación de una sola página: cualquier ruta del cliente devuelve index.html.
+    location / {
+        try_files $uri /index.html;
+        add_header Cache-Control "no-cache";
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "DENY" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    }
+
+    # Sondeo de salud del despliegue.
+    location = /salud {
+        access_log off;
+        default_type text/plain;
+        return 200 "ok";
+    }
+}

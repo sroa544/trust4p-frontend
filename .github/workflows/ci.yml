@@ -1,0 +1,58 @@
+name: CI
+
+# Integración continua: toda propuesta de cambio debe pasar lint, pruebas y
+# compilación, y la imagen debe construirse y servir la aplicación.
+on:
+  pull_request:
+  push:
+    branches-ignore: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+
+  imagen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Construir la imagen
+        run: docker build -t trust4p-frontend:ci .
+      - name: Humo 1 - levantar backend de prueba y nginx
+        run: |
+          docker network create prueba
+          docker run -d --name backend --network prueba python:3.13-alpine             python -m http.server 8000 --directory /tmp
+          docker exec backend sh -c 'echo respuesta-del-backend > /tmp/prueba.txt'
+          docker run -d --name web --network prueba -p 8080:8080             -e PORT=8080             -e API_NEGOCIO_URL=http://backend:8000             -e API_AGENTE_URL=http://backend:8000             trust4p-frontend:ci
+          sleep 5
+          docker ps --format '{{.Names}} {{.Status}}'
+          test "$(docker inspect -f '{{.State.Running}}' web)" = "true"
+      - name: Humo 2 - nginx responde en /salud
+        run: curl --retry 10 --retry-delay 1 --retry-connrefused -fsS http://localhost:8080/salud
+      - name: Humo 3 - la SPA responde en rutas del cliente
+        run: |
+          curl -fsS http://localhost:8080/panel > panel.html
+          grep -qi '<div id="root"' panel.html
+      - name: Humo 4 - /api/negocio llega al backend sin el prefijo
+        run: |
+          curl -fsS http://localhost:8080/api/negocio/prueba.txt > negocio.txt
+          grep -q respuesta-del-backend negocio.txt
+      - name: Humo 5 - /api/agente llega al backend sin el prefijo
+        run: |
+          curl -fsS http://localhost:8080/api/agente/prueba.txt > agente.txt
+          grep -q respuesta-del-backend agente.txt
+      - name: Registros de nginx (si falló)
+        if: failure()
+        run: docker logs web
