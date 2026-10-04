@@ -1,0 +1,77 @@
+name: Despliegue
+
+# Despliegue continuo: cada integración a main verifica, construye la imagen,
+# la sube a Artifact Registry y despliega una nueva revisión en Cloud Run.
+# La autenticación es por Workload Identity Federation (sin llaves de servicio);
+# los valores salen de `terraform output` del repositorio trust4p-infraestructura
+# y se guardan como variables del repositorio (Settings > Variables).
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: despliegue
+  cancel-in-progress: false
+
+env:
+  REGION: us-central1
+  PROYECTO: trust-4p
+  SERVICIO: trust4p-frontend
+  IMAGEN: us-central1-docker.pkg.dev/trust-4p/trust4p-imagenes/frontend
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+
+  desplegar:
+    needs: verificar
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+
+      - name: Construir y subir la imagen
+        run: |
+          docker build \
+            --build-arg VITE_BOTPRESS_CLIENT_ID="${{ vars.VITE_BOTPRESS_CLIENT_ID }}" \
+            -t "$IMAGEN:${GITHUB_SHA}" -t "$IMAGEN:latest" .
+          docker push "$IMAGEN:${GITHUB_SHA}"
+          docker push "$IMAGEN:latest"
+
+      - name: Desplegar en Cloud Run
+        run: |
+          gcloud run deploy "$SERVICIO" \
+            --project "$PROYECTO" --region "$REGION" \
+            --image "$IMAGEN:${GITHUB_SHA}" --quiet
+
+      - name: Verificar el despliegue
+        run: |
+          URL=$(gcloud run services describe "$SERVICIO" --project "$PROYECTO" --region "$REGION" --format 'value(status.url)')
+          echo "Frontend: $URL"
+          curl -fsS "$URL/salud"
+          # El proxy debe alcanzar la API de negocio (catálogo público de sectores).
+          curl -fsS "$URL/api/negocio/v1/sectores" | head -c 200
