@@ -40,8 +40,14 @@ jobs:
             -e API_NEGOCIO_URL=http://backend:8000 \
             -e API_AGENTE_URL=http://backend:8000 \
             trust4p-frontend:ci
+          docker exec backend sh -c 'echo respuesta-del-backend > /tmp/prueba.txt'
           for i in $(seq 1 20); do curl -fs http://localhost:8080/salud && break; sleep 1; done
+          # La SPA responde en cualquier ruta del cliente.
           test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/panel)" = "200"
           curl -s http://localhost:8080/panel | grep -qi "<div id=\"root\""
-          # /api/negocio/<ruta> se reenvía sin el prefijo: el servidor de prueba responde 404 propio (no el de nginx)
-          curl -s -i http://localhost:8080/api/negocio/no-existe | grep -qi "SimpleHTTP"
+          # /api/negocio/<ruta> y /api/agente/<ruta> llegan al backend sin el prefijo.
+          curl -s http://localhost:8080/api/negocio/prueba.txt | grep -q "respuesta-del-backend"
+          curl -s http://localhost:8080/api/agente/prueba.txt | grep -q "respuesta-del-backend"
+      - name: Registros de nginx (si falló)
+        if: failure()
+        run: docker logs web
