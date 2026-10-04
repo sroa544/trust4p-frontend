@@ -1,12 +1,8 @@
 // Sesión y accesos por rol.
 //
-// Datos de demostración. Cuando exista la API de negocio, el rol y el nombre
-// provienen del token de sesión y esta estructura se reemplaza por la
-// respuesta del servicio de autenticación. El componente no cambia.
-//
-// El actor A1 (Visitante) se incluye en el selector para poder recorrer los
-// cuatro roles en una demostración. En el sistema real no llega al panel,
-// porque no tiene sesión iniciada.
+// El rol, el nombre y la empresa provienen de la API de negocio (GET
+// /mi-perfil): aquí solo se traducen los códigos del backend a los actores
+// documentados y se declara qué pantallas tiene cada uno.
 
 export const ACTORES = [
   {
@@ -14,32 +10,30 @@ export const ACTORES = [
     nombre: 'Visitante',
     definicion:
       'Persona no registrada que consulta la página pública, ejecuta el diagnóstico de demostración y radica solicitudes de acceso.',
-    persona: 'Invitado',
   },
   {
     id: 'A2',
     nombre: 'Representante de empresa',
     definicion: 'Responde el diagnóstico y consulta los resultados de su organización.',
-    persona: 'Alejandro Morales',
-    organizacion: 'InnovaTech Logistics Corp.',
   },
   {
     id: 'A3',
     nombre: 'Consultor',
     definicion: 'Acompaña a las empresas clientes en su proceso de mejora.',
-    persona: 'Julia Herrera',
-    organizacion: 'Trust 4P',
   },
   {
     id: 'A4',
     nombre: 'Administrador',
     definicion: 'Gobierna la configuración y el modelo de la plataforma.',
-    persona: 'Elena Rostova',
-    organizacion: 'Trust 4P',
   },
 ]
 
-export const ROL_INICIAL = 'A2'
+// Código de rol del backend → actor documentado.
+export const ACTOR_POR_ROL = {
+  representante: 'A2',
+  consultor: 'A3',
+  administrador: 'A4',
+}
 
 export const ACCESOS = [
   {
@@ -50,27 +44,24 @@ export const ACCESOS = [
     icono: 'assignment',
     roles: ['A2'],
     historia: 'HU-008',
-    estado: 'disponible',
   },
   {
     id: 'resultados',
-    ruta: '/resultados/1',
+    ruta: '/resultados',
     titulo: 'Informe de resultados',
-    descripcion: 'Índice global, nivel de madurez y puntaje por cada dimensión.',
+    descripcion: 'Índice global, nivel de madurez, perfil de cultura, lienzo y puntaje por dimensión.',
     icono: 'insights',
-    roles: ['A2', 'A3'],
-    historia: 'HU-013',
-    estado: 'disponible',
+    roles: ['A2'],
+    historia: 'HU-013, HU-018',
   },
   {
     id: 'plan',
-    ruta: '/plan/1',
+    ruta: '/plan',
     titulo: 'Plan de mejora',
-    descripcion: 'Iniciativas priorizadas y proyección del índice.',
+    descripcion: 'Recomendaciones del agente y de su consultor, por dimensión.',
     icono: 'route',
-    roles: ['A2', 'A3'],
+    roles: ['A2'],
     historia: 'HU-017',
-    estado: 'disponible',
   },
   {
     id: 'historial',
@@ -78,89 +69,62 @@ export const ACCESOS = [
     titulo: 'Evolución histórica',
     descripcion: 'Variación del índice y de cada dimensión entre diagnósticos.',
     icono: 'trending_up',
-    roles: ['A2', 'A3'],
+    roles: ['A2'],
     historia: 'HU-019',
-    estado: 'disponible',
   },
   {
-    id: 'solicitud',
-    ruta: null,
-    titulo: 'Solicitud de acceso',
-    descripcion: 'Radicar la solicitud para que la consultora evalúe el ingreso de la empresa.',
-    icono: 'how_to_reg',
-    roles: ['A1'],
-    historia: 'HU-001',
-    estado: 'pendiente',
-  },
-  {
-    id: 'demostracion',
-    ruta: null,
-    titulo: 'Diagnóstico de demostración',
-    descripcion: 'Versión reducida del cuestionario para conocer el instrumento sin registrarse.',
-    icono: 'quiz',
-    roles: ['A1'],
-    historia: 'HU-007',
-    estado: 'pendiente',
-  },
-  {
-    id: 'empresas',
-    ruta: null,
+    id: 'empresas-asignadas',
+    ruta: '/consultoria',
     titulo: 'Empresas asignadas',
-    descripcion: 'Listado de las empresas acompañadas con el estado de su diagnóstico.',
+    descripcion: 'Empresas acompañadas con el estado y el nivel de su diagnóstico más reciente.',
     icono: 'apartment',
     roles: ['A3'],
-    historia: 'HU-020',
-    estado: 'pendiente',
-  },
-  {
-    id: 'respuestas',
-    ruta: null,
-    titulo: 'Detalle de respuestas',
-    descripcion: 'Revisión de las respuestas de una empresa evaluada.',
-    icono: 'fact_check',
-    roles: ['A3'],
-    historia: 'HU-021',
-    estado: 'pendiente',
+    historia: 'HU-020, HU-021, HU-022, HU-024',
   },
   {
     id: 'indicadores',
-    ruta: null,
+    ruta: '/indicadores',
     titulo: 'Indicadores agregados',
-    descripcion: 'Comportamiento del portafolio de empresas acompañadas.',
+    descripcion: 'Comportamiento del portafolio por sector, tamaño y nivel de madurez.',
     icono: 'leaderboard',
-    roles: ['A3'],
+    roles: ['A3', 'A4'],
     historia: 'HU-023',
-    estado: 'pendiente',
   },
   {
     id: 'gestion',
     ruta: '/gestion',
     titulo: 'Gestión y calibración',
-    descripcion: 'Solicitudes de acceso, ponderación del modelo y banco de preguntas.',
+    descripcion: 'Solicitudes de acceso, ponderación del modelo, banco de preguntas y simulación.',
     icono: 'tune',
     roles: ['A4'],
-    historia: 'HU-029, HU-031, HU-035',
-    estado: 'disponible',
+    historia: 'HU-002, HU-029, HU-031, HU-035',
+  },
+  {
+    id: 'usuarios',
+    ruta: '/usuarios',
+    titulo: 'Usuarios, empresas y permisos',
+    descripcion: 'Alta de usuarios y empresas, asignación de consultores y control de roles.',
+    icono: 'manage_accounts',
+    roles: ['A4'],
+    historia: 'HU-025, HU-026, HU-027, HU-028',
   },
   {
     id: 'auditoria',
     ruta: '/auditoria',
-    titulo: 'Auditoría y evidencias',
-    descripcion: 'Trazabilidad de las acciones y respaldo documental del diagnóstico.',
+    titulo: 'Auditoría',
+    descripcion: 'Bitácora de acciones y ejecuciones del agente de evaluación.',
     icono: 'verified_user',
     roles: ['A4'],
     historia: 'HU-030, HU-037',
-    estado: 'disponible',
   },
   {
-    id: 'usuarios',
-    ruta: null,
-    titulo: 'Usuarios y permisos',
-    descripcion: 'Alta de usuarios, asignación de consultores y control de roles.',
-    icono: 'manage_accounts',
-    roles: ['A4'],
-    historia: 'HU-026, HU-027, HU-028',
-    estado: 'pendiente',
+    id: 'perfil',
+    ruta: '/perfil',
+    titulo: 'Mi cuenta',
+    descripcion: 'Datos de perfil, cambio de contraseña y eliminación de datos personales.',
+    icono: 'account_circle',
+    roles: ['A2', 'A3', 'A4'],
+    historia: 'HU-006',
   },
 ]
 

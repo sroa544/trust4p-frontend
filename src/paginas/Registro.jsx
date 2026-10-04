@@ -1,72 +1,156 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import Aviso from '../componentes/Aviso.jsx'
+import { useSesion } from '../hooks/useSesion'
+import { mensajeDeError } from '../servicios/api'
+import {
+  actualizarPerfil,
+  completarRegistro,
+  consultarInvitacion,
+} from '../servicios/autenticacion'
+import {
+  REGLAS_CLAVE,
+  TEXTO_POLITICA_CLAVE,
+  dividirNombre,
+  evaluarClave,
+  formatearFecha,
+} from '../servicios/validaciones'
 
-// Datos provisionales. Se reemplazan por la respuesta del endpoint de
-// invitación cuando exista la API de negocio (objetivo 3).
-const INVITACION = {
-  empresaId: 'EMP-900842119',
-  empresaNombre: 'InnovaTech Logistics Corp.',
-  empresaNit: '900.842.119-4',
-  diagnosticoId: 'DIAG-2026-8842',
-  modeloVersion: '2026.1',
-  nombre: 'Alejandro Morales Peña',
-  correo: 'a.morales@innovatech.com',
-  rol: 'Sponsor de Innovación',
+const ROLES = {
+  representante: 'Representante de empresa',
+  consultor: 'Consultor',
+  administrador: 'Administrador',
 }
 
-// Estado inicial: todavia no se ha escrito nada, no es una valoracion.
+// Estado inicial: todavía no se ha escrito nada, no es una valoración.
 const SIN_CLAVE = { texto: 'Pendiente', color: 'text-outline', relleno: 'bg-transparent', ancho: '0%' }
 
-// El indice corresponde a la cantidad de criterios cumplidos (0 a 4).
-// Con cero criterios se muestra un tramo minimo para que haya senal visual.
+// Índice = reglas de la política cumplidas (0 a 5). Con cero se muestra un
+// tramo mínimo para que haya señal visual.
 const NIVELES_CLAVE = [
   { texto: 'Muy baja', color: 'text-error', relleno: 'bg-error', ancho: '10%' },
-  { texto: 'Baja', color: 'text-error', relleno: 'bg-error', ancho: '25%' },
-  { texto: 'Media', color: 'text-secondary', relleno: 'bg-secondary', ancho: '50%' },
-  { texto: 'Robusta', color: 'text-secondary', relleno: 'bg-secondary-fixed-dim', ancho: '75%' },
+  { texto: 'Muy baja', color: 'text-error', relleno: 'bg-error', ancho: '20%' },
+  { texto: 'Baja', color: 'text-error', relleno: 'bg-error', ancho: '40%' },
+  { texto: 'Media', color: 'text-secondary', relleno: 'bg-secondary', ancho: '60%' },
+  { texto: 'Robusta', color: 'text-secondary', relleno: 'bg-secondary-fixed-dim', ancho: '80%' },
   { texto: 'Excelente', color: 'text-tertiary', relleno: 'bg-tertiary', ancho: '100%' },
 ]
 
-function evaluarClave(clave) {
-  return {
-    longitud: clave.length >= 8,
-    mayuscula: /[A-Z]/.test(clave),
-    numero: /[0-9]/.test(clave),
-    especial: /[^A-Za-z0-9]/.test(clave),
-  }
+function Pantalla({ children }) {
+  return (
+    <main className="w-full flex-1 flex flex-col justify-center items-center p-margin-mobile lg:p-margin">
+      <div className="bg-surface-container-lowest rounded-xl shadow-md p-space-lg max-w-lg text-center flex flex-col gap-space-sm">
+        {children}
+      </div>
+    </main>
+  )
 }
 
 export default function Registro() {
+  const [parametros] = useSearchParams()
+  const codigo = parametros.get('codigo') ?? ''
+  const [invitacion, setInvitacion] = useState(null)
+  const [estadoInvitacion, setEstadoInvitacion] = useState(codigo ? 'cargando' : 'invalida')
+  const [nombres, setNombres] = useState('')
+  const [apellidos, setApellidos] = useState('')
+  const [cargo, setCargo] = useState('')
   const [clave, setClave] = useState('')
   const [confirmacion, setConfirmacion] = useState('')
   const [verClave, setVerClave] = useState(false)
   const [verConfirmacion, setVerConfirmacion] = useState(false)
+  const [acepto, setAcepto] = useState(false)
+  const [represento, setRepresento] = useState(false)
   const [error, setError] = useState('')
+  const [enviando, setEnviando] = useState(false)
   const navigate = useNavigate()
+  const { iniciarSesion } = useSesion()
+
+  useEffect(() => {
+    if (!codigo) return undefined
+    let activo = true
+    consultarInvitacion(codigo)
+      .then((datos) => {
+        if (!activo) return
+        const partes = dividirNombre(datos.nombre)
+        setInvitacion(datos)
+        setNombres(partes.nombres)
+        setApellidos(partes.apellidos)
+        setEstadoInvitacion('lista')
+      })
+      .catch(() => activo && setEstadoInvitacion('invalida'))
+    return () => {
+      activo = false
+    }
+  }, [codigo])
 
   const criterios = evaluarClave(clave)
-  const puntaje = Object.values(criterios).filter(Boolean).length
+  const puntaje = REGLAS_CLAVE.filter((regla) => criterios[regla.clave]).length
   const nivel = clave.length === 0 ? SIN_CLAVE : NIVELES_CLAVE[puntaje]
 
-  const listaCriterios = [
-    { cumple: criterios.longitud, texto: 'Mínimo 8 caracteres' },
-    { cumple: criterios.mayuscula, texto: 'Al menos 1 mayúscula' },
-    { cumple: criterios.numero, texto: 'Incluye números' },
-    { cumple: criterios.especial, texto: 'Símbolo especial (!@#$)' },
-  ]
-
-  function enviar(e) {
+  async function enviar(e) {
     e.preventDefault()
     if (clave !== confirmacion) {
       setError('Las contraseñas no coinciden.')
       return
     }
-    if (puntaje < 4) {
-      setError('La contraseña no cumple todos los criterios de seguridad.')
-      return
-    }
     setError('')
-    navigate('/panel')
+    setEnviando(true)
+    try {
+      await completarRegistro({
+        codigo,
+        clave,
+        nombres: nombres.trim(),
+        apellidos: apellidos.trim(),
+        aceptoTratamiento: acepto,
+      })
+      await iniciarSesion(invitacion.correo, clave)
+      if (cargo.trim()) {
+        try {
+          await actualizarPerfil({ cargo: cargo.trim() })
+        } catch {
+          // El cargo es opcional para el acceso; se puede completar en "Mi cuenta".
+        }
+      }
+      navigate('/panel', { replace: true })
+    } catch (falla) {
+      setError(mensajeDeError(falla))
+    } finally {
+      setEnviando(false)
+    }
+  }
+
+  if (estadoInvitacion === 'cargando') {
+    return (
+      <Pantalla>
+        <span className="font-body-md text-body-md text-on-surface-variant" role="status">
+          Verificando la invitación…
+        </span>
+      </Pantalla>
+    )
+  }
+
+  if (estadoInvitacion === 'invalida') {
+    return (
+      <Pantalla>
+        <span className="material-symbols-outlined text-error text-4xl">link_off</span>
+        <h1 className="font-headline-md text-headline-md text-on-surface font-bold">
+          La invitación no es válida
+        </h1>
+        <p className="font-body-md text-body-md text-on-surface-variant">
+          El enlace ya fue utilizado, venció o no existe. Puedes solicitar acceso de nuevo para
+          que la consultora emita otra invitación.
+        </p>
+        <Link
+          className="inline-flex items-center justify-center gap-1 h-11 px-5 rounded-lg bg-primary text-on-primary font-label-lg text-label-lg"
+          to="/solicitar-acceso"
+        >
+          Solicitar una nueva invitación
+        </Link>
+        <Link className="font-label-md text-label-md text-primary" to="/login">
+          Volver al inicio de sesión
+        </Link>
+      </Pantalla>
+    )
   }
 
   return (
@@ -82,22 +166,11 @@ export default function Registro() {
             <div className="relative z-10 flex flex-col space-y-6">
               <div className="flex items-center justify-between gap-4 flex-wrap">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-surface-container-lowest/15 flex items-center justify-center backdrop-blur-sm shadow-sm">
-                    <svg className="w-6 h-6 text-secondary-fixed" fill="none" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M7 11C7 8.23858 9.23858 6 12 6H16C18.7614 6 21 8.23858 21 11V13C21 15.7614 18.7614 18 16 18H12C9.23858 18 7 15.7614 7 13V11Z" stroke="currentColor" strokeLinecap="round" strokeWidth="2.5"></path>
-                      <path d="M11 19C11 16.2386 13.2386 14 16 14H20C22.7614 14 25 16.2386 25 19V21C25 23.7614 22.7614 26 20 26H16C13.2386 26 11 23.7614 11 21V19Z" stroke="#9ECC89" strokeLinecap="round" strokeWidth="2.5"></path>
-                    </svg>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="font-headline-sm text-headline-sm font-bold tracking-tight text-on-primary">
-                      TRUST <span className="text-secondary-fixed">4P</span>
-                    </span>
-                    <span className="font-label-caps text-label-caps text-on-primary-container tracking-wider">DE LA VISIÓN A LA SOLUCIÓN</span>
-                  </div>
+                  <img alt="Trust 4P" className="h-10 w-auto object-contain" src="/logo-trust4p-blanco.png" />
                 </div>
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-lowest/15 backdrop-blur-md text-on-primary font-label-caps text-label-caps tracking-wider">
                   <span className="w-2 h-2 rounded-full bg-secondary-fixed animate-pulse"></span>
-                  INVITACIÓN OFICIAL v{INVITACION.modeloVersion}
+                  INVITACIÓN OFICIAL
                 </span>
               </div>
 
@@ -111,32 +184,28 @@ export default function Registro() {
               </div>
 
               <div className="bg-surface-container-lowest/10 backdrop-blur-md rounded-xl p-5 shadow-sm space-y-3.5">
-                <div className="flex items-start justify-between pb-3 border-b border-on-primary/10">
-                  <div className="space-y-0.5">
-                    <span className="font-label-caps text-label-caps text-on-primary-container uppercase">Empresa asignada</span>
-                    <p className="font-headline-sm text-headline-sm text-on-primary font-semibold">{INVITACION.empresaNombre}</p>
-                    <p className="font-body-sm text-body-sm text-on-primary-container">NIT: {INVITACION.empresaNit}</p>
+                {invitacion.empresa_nombre && (
+                  <div className="flex items-start justify-between pb-3 border-b border-on-primary/10">
+                    <div className="space-y-0.5">
+                      <span className="font-label-caps text-label-caps text-on-primary-container uppercase">Empresa asignada</span>
+                      <p className="font-headline-sm text-headline-sm text-on-primary font-semibold">{invitacion.empresa_nombre}</p>
+                      {invitacion.empresa_nit && (
+                        <p className="font-body-sm text-body-sm text-on-primary-container">NIT: {invitacion.empresa_nit}</p>
+                      )}
+                    </div>
+                    <span className="material-symbols-outlined text-secondary-fixed" style={{ fontVariationSettings: "'FILL' 1" }}>apartment</span>
                   </div>
-                  <span className="material-symbols-outlined text-secondary-fixed" style={{ fontVariationSettings: "'FILL' 1" }}>apartment</span>
-                </div>
+                )}
 
                 <div className="grid grid-cols-2 gap-3 pt-1">
                   <div className="space-y-0.5">
                     <span className="font-label-caps text-label-caps text-on-primary-container uppercase">Rol asignado</span>
-                    <p className="font-body-sm text-body-sm text-on-primary font-semibold">{INVITACION.rol}</p>
+                    <p className="font-body-sm text-body-sm text-on-primary font-semibold">{ROLES[invitacion.rol_codigo] ?? invitacion.rol_codigo}</p>
                   </div>
                   <div className="space-y-0.5">
-                    <span className="font-label-caps text-label-caps text-on-primary-container uppercase">Diagnóstico</span>
-                    <p className="font-body-sm text-body-sm text-secondary-fixed font-mono font-medium">{INVITACION.diagnosticoId}</p>
-                  </div>
-                  <div className="space-y-0.5">
-                    <span className="font-label-caps text-label-caps text-on-primary-container uppercase">Versión del modelo</span>
-                    <p className="font-body-sm text-body-sm text-on-primary font-medium">{INVITACION.modeloVersion}</p>
-                  </div>
-                  <div className="space-y-0.5">
-                    <span className="font-label-caps text-label-caps text-on-primary-container uppercase">Vigencia</span>
+                    <span className="font-label-caps text-label-caps text-on-primary-container uppercase">Vigente hasta</span>
                     <p className="font-body-sm text-body-sm text-tertiary-fixed font-medium flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[14px]">schedule</span> 72 horas
+                      <span className="material-symbols-outlined text-[14px]">schedule</span> {formatearFecha(invitacion.expira_en)}
                     </p>
                   </div>
                 </div>
@@ -146,7 +215,7 @@ export default function Registro() {
             <div className="relative z-10 pt-6 mt-6 border-t border-on-primary/10 grid grid-cols-1 sm:grid-cols-3 gap-2">
               <div className="flex items-center gap-2 text-on-primary-container">
                 <span className="material-symbols-outlined text-[18px] text-secondary-fixed">lock</span>
-                <span className="font-body-sm text-[11px] leading-tight">Cifrado extremo a extremo</span>
+                <span className="font-body-sm text-[11px] leading-tight">Sesión segura</span>
               </div>
               <div className="flex items-center gap-2 text-on-primary-container">
                 <span className="material-symbols-outlined text-[18px] text-secondary-fixed">verified_user</span>
@@ -175,32 +244,40 @@ export default function Registro() {
               <div className="space-y-1">
                 <h2 className="font-headline-lg text-headline-lg font-bold text-on-surface">Configura tus credenciales</h2>
                 <p className="font-body-md text-body-md text-on-surface-variant">
-                  Completa la información para vincular tu perfil al diagnóstico de {INVITACION.empresaNombre}
+                  {invitacion.empresa_nombre
+                    ? `Completa la información para vincular tu perfil a ${invitacion.empresa_nombre}`
+                    : 'Completa la información para activar tu cuenta'}
                 </p>
               </div>
 
               <form className="space-y-5" onSubmit={enviar}>
-                <input name="empresa_id" type="hidden" defaultValue={INVITACION.empresaId} />
-                <input name="diagnostico_id" type="hidden" defaultValue={INVITACION.diagnosticoId} />
-                <input name="modelo_version" type="hidden" defaultValue={INVITACION.modeloVersion} />
-
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <label className="block font-label-lg text-label-lg font-semibold text-on-surface" htmlFor="nombre">Nombre completo</label>
-                    <span className="inline-flex items-center gap-1 font-label-caps text-[10px] uppercase font-bold text-on-surface-variant bg-surface-container-high px-2 py-0.5 rounded-full">
-                      <span className="material-symbols-outlined text-[12px]">lock</span>
-                      Precargado
-                    </span>
-                  </div>
-                  <div className="relative">
-                    <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-[20px]">person</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="block font-label-lg text-label-lg font-semibold text-on-surface" htmlFor="nombres">
+                      Nombres <span className="text-error">*</span>
+                    </label>
                     <input
-                      className="w-full h-11 pl-11 pr-4 bg-surface-container-high text-on-surface-variant cursor-not-allowed rounded-lg font-body-md text-body-md font-medium select-all shadow-inner"
-                      id="nombre"
-                      name="nombre"
-                      readOnly
+                      className="w-full h-11 px-4 bg-surface rounded-lg font-body-md text-body-md text-on-surface focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-secondary/40 shadow-sm"
+                      id="nombres"
+                      name="nombres"
+                      required
                       type="text"
-                      value={INVITACION.nombre}
+                      value={nombres}
+                      onChange={(e) => setNombres(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="block font-label-lg text-label-lg font-semibold text-on-surface" htmlFor="apellidos">
+                      Apellidos <span className="text-error">*</span>
+                    </label>
+                    <input
+                      className="w-full h-11 px-4 bg-surface rounded-lg font-body-md text-body-md text-on-surface focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-secondary/40 shadow-sm"
+                      id="apellidos"
+                      name="apellidos"
+                      required
+                      type="text"
+                      value={apellidos}
+                      onChange={(e) => setApellidos(e.target.value)}
                     />
                   </div>
                 </div>
@@ -221,17 +298,17 @@ export default function Registro() {
                       name="correo"
                       readOnly
                       type="email"
-                      value={INVITACION.correo}
+                      value={invitacion.correo}
                     />
                   </div>
                   <p className="font-body-sm text-body-sm text-outline">
-                    El correo está ligado al token de invitación y no puede modificarse.
+                    El correo está ligado a la invitación y no puede modificarse.
                   </p>
                 </div>
 
                 <div className="space-y-1.5">
                   <label className="block font-label-lg text-label-lg font-semibold text-on-surface" htmlFor="cargo">
-                    Cargo <span className="text-error">*</span>
+                    Cargo
                   </label>
                   <div className="relative">
                     <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-[20px]">badge</span>
@@ -240,8 +317,9 @@ export default function Registro() {
                       id="cargo"
                       name="cargo"
                       placeholder="ej. Director de Innovación"
-                      required
                       type="text"
+                      value={cargo}
+                      onChange={(e) => setCargo(e.target.value)}
                     />
                   </div>
                 </div>
@@ -254,6 +332,7 @@ export default function Registro() {
                     <div className="relative">
                       <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-[20px]">key</span>
                       <input
+                        autoComplete="new-password"
                         className="w-full h-11 pl-11 pr-10 bg-surface rounded-lg font-body-md text-body-md text-on-surface placeholder:text-outline focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-secondary/40 shadow-sm transition-all"
                         id="clave"
                         name="clave"
@@ -281,6 +360,7 @@ export default function Registro() {
                     <div className="relative">
                       <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-[20px]">lock_reset</span>
                       <input
+                        autoComplete="new-password"
                         className="w-full h-11 pl-11 pr-10 bg-surface rounded-lg font-body-md text-body-md text-on-surface placeholder:text-outline focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-secondary/40 shadow-sm transition-all"
                         id="confirmacion"
                         name="confirmacion"
@@ -309,7 +389,7 @@ export default function Registro() {
                   </div>
                   <div
                     aria-label={`Seguridad de la contraseña: ${nivel.texto}`}
-                    aria-valuemax={4}
+                    aria-valuemax={5}
                     aria-valuemin={0}
                     aria-valuenow={clave.length === 0 ? 0 : puntaje}
                     className="w-full h-1.5 bg-surface-variant rounded-full overflow-hidden"
@@ -321,39 +401,44 @@ export default function Registro() {
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-1 font-body-sm text-[11px]">
-                    {listaCriterios.map((criterio) => (
+                    {REGLAS_CLAVE.map((regla) => (
                       <span
-                        key={criterio.texto}
-                        className={`flex items-center gap-1 ${criterio.cumple ? 'text-tertiary font-medium' : 'text-outline'}`}
+                        key={regla.clave}
+                        className={`flex items-center gap-1 ${criterios[regla.clave] ? 'text-tertiary font-medium' : 'text-outline'}`}
                       >
                         <span className="material-symbols-outlined text-[13px]">
-                          {criterio.cumple ? 'check_circle' : 'radio_button_unchecked'}
+                          {criterios[regla.clave] ? 'check_circle' : 'radio_button_unchecked'}
                         </span>
-                        {criterio.texto}
+                        {regla.texto}
                       </span>
                     ))}
                   </div>
+                  <p className="font-body-sm text-[11px] text-outline">{TEXTO_POLITICA_CLAVE}</p>
                 </div>
 
                 <fieldset className="space-y-3 pt-1">
                   <legend className="sr-only">Consentimiento y tratamiento de datos</legend>
                   <div className="flex items-start gap-3">
                     <input
+                      checked={acepto}
                       className="mt-1 w-4 h-4 rounded text-primary focus:ring-primary focus:ring-offset-0 cursor-pointer accent-primary"
                       id="acuerdo_confidencialidad"
                       name="acuerdo_confidencialidad"
+                      onChange={(e) => setAcepto(e.target.checked)}
                       required
                       type="checkbox"
                     />
                     <label className="font-body-sm text-body-sm text-on-surface leading-relaxed cursor-pointer select-none" htmlFor="acuerdo_confidencialidad">
-                      Acepto los términos del <a className="font-semibold text-primary underline hover:text-primary-container" href="#nda">acuerdo de confidencialidad</a> y autorizo el tratamiento de mis datos personales conforme a la Ley 1581 de 2012.
+                      Acepto los términos del acuerdo de confidencialidad y autorizo el tratamiento de mis datos personales conforme a la Ley 1581 de 2012.
                     </label>
                   </div>
                   <div className="flex items-start gap-3">
                     <input
+                      checked={represento}
                       className="mt-1 w-4 h-4 rounded text-primary focus:ring-primary focus:ring-offset-0 cursor-pointer accent-primary"
                       id="representacion"
                       name="representacion"
+                      onChange={(e) => setRepresento(e.target.checked)}
                       required
                       type="checkbox"
                     />
@@ -363,18 +448,15 @@ export default function Registro() {
                   </div>
                 </fieldset>
 
-                {error && (
-                  <p className="p-2.5 rounded-md bg-error-container text-on-error-container font-label-md text-label-md text-center">
-                    {error}
-                  </p>
-                )}
+                <Aviso className="text-center" tipo="error">{error}</Aviso>
 
                 <div className="pt-3">
                   <button
-                    className="w-full h-12 px-6 rounded-lg bg-primary-container hover:bg-primary text-on-primary font-label-lg text-label-lg font-semibold tracking-wide flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all active:scale-[0.99] group"
+                    className="w-full h-12 px-6 rounded-lg bg-primary-container hover:bg-primary text-on-primary font-label-lg text-label-lg font-semibold tracking-wide flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all active:scale-[0.99] group disabled:opacity-60"
+                    disabled={enviando}
                     type="submit"
                   >
-                    <span>Crear cuenta y activar diagnóstico</span>
+                    <span>{enviando ? 'Creando cuenta…' : 'Crear cuenta y activar diagnóstico'}</span>
                     <span className="material-symbols-outlined text-[20px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
                   </button>
                 </div>
