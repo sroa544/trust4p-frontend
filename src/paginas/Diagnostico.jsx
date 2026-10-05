@@ -1,4 +1,4 @@
-import { Link, Navigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import Aviso from '../componentes/Aviso.jsx'
 import EntradaPregunta from '../componentes/EntradaPregunta.jsx'
 import { useCuestionario } from '../hooks/useCuestionario'
@@ -76,8 +76,31 @@ export default function Diagnostico() {
   }
 
   if (c.fase === 'terminado') {
+    // El cuestionario de este ciclo ya fue respondido. Antes se redirigia en
+    // silencio al informe; ahora se avisa y la persona decide a donde va. El
+    // destino cambia con el estado: un ciclo cerrado ya no tiene informe
+    // abierto y se consulta desde la evolucion historica.
     const cerrado = c.diagnostico.estado === 'cerrado'
-    return <Navigate replace to={cerrado ? '/historial' : `/resultados/${c.diagnostico.id}`} />
+    return (
+      <Pantalla icono="task_alt" titulo="El cuestionario ya fue respondido">
+        <p className="font-body-md text-body-md text-on-surface-variant">
+          {cerrado
+            ? 'Este ciclo de diagnóstico está cerrado; sus respuestas ya no pueden modificarse. Puede consultarlo en la evolución histórica de su organización.'
+            : 'Su empresa ya completó el cuestionario de este ciclo. Puede consultar el informe de resultados cuando quiera.'}
+        </p>
+
+        <Link
+          className={BOTON_PRIMARIO}
+          to={cerrado ? '/historial' : `/resultados/${c.diagnostico.id}`}
+        >
+          {cerrado ? 'Ver evolución histórica' : 'Ver informe de resultados'}
+        </Link>
+
+        <Link className="font-label-md text-label-md text-primary" to="/panel">
+          Volver al panel
+        </Link>
+      </Pantalla>
+    )
   }
 
   const { actual, cuestionario, diagnostico, avance } = c

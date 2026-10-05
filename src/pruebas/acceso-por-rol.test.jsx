@@ -1,6 +1,7 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import MenuLateral from '../componentes/MenuLateral.jsx'
 import RutaPorRol from '../componentes/RutaPorRol.jsx'
 import { SesionProvider } from '../hooks/useSesion.jsx'
 import Panel from '../paginas/Panel.jsx'
@@ -23,6 +24,7 @@ function montar(ruta) {
   render(
     <MemoryRouter initialEntries={[ruta]}>
       <SesionProvider>
+        <MenuLateral />
         <Routes>
           <Route element={<p>Pantalla de ingreso</p>} path="/login" />
           <Route element={<Panel />} path="/panel" />
@@ -73,12 +75,18 @@ describe('Acceso por rol', () => {
     expect(screen.queryByText('Gestión de administración')).not.toBeInTheDocument()
   })
 
-  it('el panel solo ofrece los accesos del rol y no los de otros', async () => {
+  it('la navegación solo ofrece los accesos del rol y no los de otros', async () => {
     servicios.obtenerPerfil.mockResolvedValue(PERFIL_REPRESENTANTE)
     montar('/panel')
 
-    expect(await screen.findByText('Cuestionario de diagnóstico')).toBeInTheDocument()
-    expect(screen.getByText('Plan de mejora')).toBeInTheDocument()
+    // Cada modulo del rol se nombra dos veces: en el menu lateral y en su
+    // tarjeta del panel. Por eso lo que debe estar se busca acotado al menu, y
+    // lo que no debe estar se busca en todo el documento: ninguna de las dos
+    // superficies puede ofrecer un acceso de otro rol.
+    const menu = within(await screen.findByRole('navigation', { name: 'Módulos' }))
+
+    expect(menu.getByText('Cuestionario de diagnóstico')).toBeInTheDocument()
+    expect(menu.getByText('Plan de mejora')).toBeInTheDocument()
     expect(screen.queryByText('Auditoría')).not.toBeInTheDocument()
     expect(screen.queryByText('Empresas asignadas')).not.toBeInTheDocument()
     expect(screen.getByText('Innovatech SAS')).toBeInTheDocument()
@@ -88,8 +96,10 @@ describe('Acceso por rol', () => {
     servicios.obtenerPerfil.mockResolvedValue({ ...PERFIL_REPRESENTANTE, rol_codigo: 'administrador', empresa_nombre: null })
     montar('/panel')
 
-    expect(await screen.findByText('Auditoría')).toBeInTheDocument()
-    expect(screen.getByText('Gestión y calibración')).toBeInTheDocument()
+    const menu = within(await screen.findByRole('navigation', { name: 'Módulos' }))
+
+    expect(menu.getByText('Auditoría')).toBeInTheDocument()
+    expect(menu.getByText('Gestión y calibración')).toBeInTheDocument()
     expect(screen.queryByText('Cuestionario de diagnóstico')).not.toBeInTheDocument()
   })
 })

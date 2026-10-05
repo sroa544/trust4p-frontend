@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 
 import AsistenteChat from './componentes/AsistenteChat.jsx'
 import BarraSesion from './componentes/BarraSesion.jsx'
+import MenuLateral from './componentes/MenuLateral.jsx'
 import RutaPorRol from './componentes/RutaPorRol.jsx'
 import Login from './paginas/Login.jsx'
 import Registro from './paginas/Registro.jsx'
@@ -26,7 +27,14 @@ import Usuarios from './paginas/Usuarios.jsx'
 const TODOS = ['A2', 'A3', 'A4']
 
 function Protegida({ roles, children }) {
-  return <RutaPorRol roles={roles}>{children}</RutaPorRol>
+  return (
+    <RutaPorRol roles={roles}>
+      <div className="w-full flex-1 flex flex-col lg:flex-row">
+        <MenuLateral />
+        <div className="flex-1 min-w-0 flex flex-col">{children}</div>
+      </div>
+    </RutaPorRol>
+  )
 }
 
 export default function App() {
