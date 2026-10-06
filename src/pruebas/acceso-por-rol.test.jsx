@@ -92,6 +92,25 @@ describe('Acceso por rol', () => {
     expect(screen.getByText('Innovatech SAS')).toBeInTheDocument()
   })
 
+  it('el panel no muestra códigos de historias de usuario al usuario final', async () => {
+    for (const rol of ['representante', 'consultor', 'administrador']) {
+      servicios.obtenerPerfil.mockResolvedValue({ ...PERFIL_REPRESENTANTE, rol_codigo: rol })
+      const { unmount } = render(
+        <MemoryRouter initialEntries={['/panel']}>
+          <SesionProvider>
+            <Routes>
+              <Route element={<Panel />} path="/panel" />
+            </Routes>
+          </SesionProvider>
+        </MemoryRouter>,
+      )
+
+      await screen.findByText(/Disponible para su rol/i)
+      expect(document.body.textContent).not.toMatch(/\bHU-\d+/)
+      unmount()
+    }
+  })
+
   it('el administrador ve las pantallas de gobierno', async () => {
     servicios.obtenerPerfil.mockResolvedValue({ ...PERFIL_REPRESENTANTE, rol_codigo: 'administrador', empresa_nombre: null })
     montar('/panel')

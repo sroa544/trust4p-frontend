@@ -107,14 +107,7 @@ export default function Panel() {
                   {acceso.descripcion}
                 </p>
 
-                {/* El pie lleva las historias de usuario en el lado ancho de la
-                    tarjeta: la lista del administrador son cuatro codigos y en
-                    una esquina se partiria. */}
-                <span className="flex items-center justify-between gap-space-sm mt-space-md pt-space-md border-t border-surface-container">
-                  <span className="font-label-caps text-label-caps px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant">
-                    {acceso.historia}
-                  </span>
-
+                <span className="flex items-center justify-end gap-space-sm mt-space-md pt-space-md border-t border-surface-container">
                   <span
                     aria-hidden="true"
                     className="material-symbols-outlined text-xl text-primary shrink-0 transition-transform group-hover:translate-x-1"

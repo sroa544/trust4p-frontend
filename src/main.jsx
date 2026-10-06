@@ -4,6 +4,9 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App.jsx'
 import { SesionProvider } from './hooks/useSesion.jsx'
 import './index.css'
+import { activarMensajesEnEspanol } from './servicios/validacionNativa'
+
+activarMensajesEnEspanol()
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

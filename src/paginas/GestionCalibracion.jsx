@@ -3,12 +3,14 @@ import Aviso from '../componentes/Aviso.jsx'
 import { CLASE_ENTRADA } from '../componentes/TarjetaPublica.jsx'
 import { mensajeDeError } from '../servicios/api'
 import {
+  agregarDimension,
   consultarModelo,
   crearNuevaVersion,
   desactivarPregunta,
   editarDimension,
   listarModelos,
   publicarModelo,
+  quitarDimension,
   reactivarPregunta,
   simularPesos,
 } from '../servicios/modelos'
@@ -17,6 +19,8 @@ import { formatearFechaHora, numero } from '../servicios/validaciones'
 
 const BOTON = 'h-9 px-3 rounded-lg bg-surface-container text-on-surface font-label-md text-label-md disabled:opacity-60'
 const BOTON_PRIMARIO = 'h-10 px-5 rounded-lg bg-primary text-on-primary font-label-lg text-label-lg font-semibold disabled:opacity-60'
+
+const DIMENSION_VACIA = { codigo: '', nombre: '', peso: '', orden: '', descripcion: '' }
 
 const ESTADOS_SOLICITUD = { pendiente: 'Pendiente', aprobada: 'Aprobada', rechazada: 'Rechazada' }
 
@@ -206,6 +210,7 @@ function PestanaModelo({ estado }) {
   const { modelos, modeloId, setModeloId, modelo, error, recargar } = estado
   const [mensaje, setMensaje] = useState({ tipo: 'info', texto: '' })
   const [pesos, setPesos] = useState({})
+  const [nueva, setNueva] = useState(DIMENSION_VACIA)
 
   useEffect(() => {
     if (modelo) setPesos(Object.fromEntries(modelo.dimensiones.map((d) => [d.codigo, String(Number(d.peso))])))
@@ -237,8 +242,30 @@ function PestanaModelo({ estado }) {
     }, 'Ponderación guardada. Se valida que sume 1 al publicar.')
   }
 
+  async function renombrar(d) {
+    const nombre = window.prompt('Nombre de la dimensión', d.nombre)
+    if (nombre === null || !nombre.trim() || nombre.trim() === d.nombre) return
+    await ejecutar(() => editarDimension(modelo.id, d.codigo, { nombre: nombre.trim() }), 'Dimensión renombrada.')
+  }
+
+  async function quitar(d) {
+    const aviso = `¿Quitar la dimensión «${d.nombre}» de este borrador? Sus preguntas deberán reasignarse o desactivarse antes de publicar.`
+    if (!window.confirm(aviso)) return
+    await ejecutar(() => quitarDimension(modelo.id, d.codigo), 'Dimensión quitada del borrador.')
+  }
+
+  async function agregar(e) {
+    e.preventDefault()
+    const creada = await ejecutar(
+      () => agregarDimension(modelo.id, { ...nueva, orden: nueva.orden || siguienteOrden }),
+      'Dimensión agregada. Ajuste los pesos para que sumen 1.',
+    )
+    if (creada) setNueva(DIMENSION_VACIA)
+  }
+
   const suma = Object.values(pesos).reduce((acc, p) => acc + (Number(p) || 0), 0)
   const borrador = modelo && !modelo.publicado
+  const siguienteOrden = modelo ? Math.max(0, ...modelo.dimensiones.map((d) => d.orden)) + 1 : 1
 
   return (
     <div className="flex flex-col gap-space-md">
@@ -274,23 +301,63 @@ function PestanaModelo({ estado }) {
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {[...modelo.dimensiones].sort((a, b) => a.orden - b.orden).map((d) => (
-                <label className="flex flex-col gap-1 font-label-md text-label-md" key={d.codigo}>
-                  {d.nombre}
-                  <input
-                    className={CLASE_ENTRADA}
-                    disabled={!borrador}
-                    max="1"
-                    min="0"
-                    onChange={(e) => setPesos({ ...pesos, [d.codigo]: e.target.value })}
-                    step="0.01"
-                    type="number"
-                    value={pesos[d.codigo] ?? ''}
-                  />
-                </label>
+                <div className="flex flex-col gap-2" key={d.codigo}>
+                  <label className="flex flex-col gap-1 font-label-md text-label-md">
+                    {d.nombre}
+                    <input
+                      className={CLASE_ENTRADA}
+                      disabled={!borrador}
+                      max="1"
+                      min="0"
+                      onChange={(e) => setPesos({ ...pesos, [d.codigo]: e.target.value })}
+                      step="0.01"
+                      type="number"
+                      value={pesos[d.codigo] ?? ''}
+                    />
+                  </label>
+                  {borrador && (
+                    <div className="flex gap-2">
+                      <button aria-label={`Renombrar ${d.nombre}`} className={BOTON} onClick={() => renombrar(d)} type="button">Renombrar</button>
+                      <button aria-label={`Quitar ${d.nombre}`} className={BOTON} onClick={() => quitar(d)} type="button">Quitar</button>
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
             {borrador && (
               <button className={`${BOTON_PRIMARIO} mt-4`} onClick={guardarPesos} type="button">Guardar ponderación</button>
+            )}
+
+            {borrador && (
+              <form className="mt-6 pt-4 border-t border-surface-container" onSubmit={agregar}>
+                <h3 className="font-headline-sm text-headline-sm font-bold">Agregar dimensión</h3>
+                <p className="font-body-sm text-body-sm text-on-surface-variant mb-3">
+                  La nueva dimensión necesita al menos una pregunta activa antes de publicar.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <label className="flex flex-col gap-1 font-label-md text-label-md">
+                    Código
+                    <input className={CLASE_ENTRADA} maxLength={50} onChange={(e) => setNueva({ ...nueva, codigo: e.target.value })} placeholder="ej. clientes" required value={nueva.codigo} />
+                  </label>
+                  <label className="flex flex-col gap-1 font-label-md text-label-md">
+                    Nombre
+                    <input className={CLASE_ENTRADA} maxLength={200} onChange={(e) => setNueva({ ...nueva, nombre: e.target.value })} required value={nueva.nombre} />
+                  </label>
+                  <label className="flex flex-col gap-1 font-label-md text-label-md">
+                    Peso
+                    <input className={CLASE_ENTRADA} max="1" min="0" onChange={(e) => setNueva({ ...nueva, peso: e.target.value })} required step="0.01" type="number" value={nueva.peso} />
+                  </label>
+                  <label className="flex flex-col gap-1 font-label-md text-label-md">
+                    Orden
+                    <input className={CLASE_ENTRADA} min="1" onChange={(e) => setNueva({ ...nueva, orden: e.target.value })} placeholder={String(siguienteOrden)} type="number" value={nueva.orden} />
+                  </label>
+                  <label className="flex flex-col gap-1 font-label-md text-label-md sm:col-span-2 lg:col-span-4">
+                    Descripción (opcional)
+                    <input className={CLASE_ENTRADA} onChange={(e) => setNueva({ ...nueva, descripcion: e.target.value })} value={nueva.descripcion} />
+                  </label>
+                </div>
+                <button className={`${BOTON_PRIMARIO} mt-4`} type="submit">Agregar dimensión</button>
+              </form>
             )}
           </section>
 
