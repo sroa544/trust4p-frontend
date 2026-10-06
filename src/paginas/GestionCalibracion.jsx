@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react'
 import Aviso from '../componentes/Aviso.jsx'
 import { CLASE_ENTRADA } from '../componentes/TarjetaPublica.jsx'
 import { mensajeDeError } from '../servicios/api'
+import BaseConocimiento from '../componentes/BaseConocimiento.jsx'
+import EjesPerfilCultura from '../componentes/EjesPerfilCultura.jsx'
 import FormularioPregunta from '../componentes/FormularioPregunta.jsx'
 import {
   agregarDimension,
@@ -10,6 +12,7 @@ import {
   crearNuevaVersion,
   desactivarPregunta,
   editarDimension,
+  editarEje,
   editarPregunta,
   listarModelos,
   publicarModelo,
@@ -378,6 +381,12 @@ function PestanaModelo({ estado }) {
             )}
           </section>
 
+          <EjesPerfilCultura
+            alGuardar={(codigo, cambios) => ejecutar(() => editarEje(modelo.id, codigo, cambios), `Eje ${codigo} actualizado.`)}
+            editable={Boolean(borrador)}
+            modelo={modelo}
+          />
+
           <section className="bg-surface-container-lowest rounded-xl shadow-sm overflow-x-auto">
             <div className="p-space-lg flex flex-wrap items-start justify-between gap-3">
               <div>
@@ -567,6 +576,7 @@ const PESTANAS = [
   { id: 'solicitudes', texto: 'Solicitudes de acceso' },
   { id: 'modelo', texto: 'Modelo y preguntas' },
   { id: 'simulacion', texto: 'Simulación de pesos' },
+  { id: 'conocimiento', texto: 'Base de conocimiento' },
 ]
 
 // HU-002, HU-029 a HU-035: solicitudes de acceso y gobierno del modelo de madurez.
@@ -601,6 +611,7 @@ export default function GestionCalibracion() {
         {pestana === 'solicitudes' && <PestanaSolicitudes />}
         {pestana === 'modelo' && <PestanaModelo estado={estadoModelo} />}
         {pestana === 'simulacion' && <PestanaSimulacion estado={estadoModelo} />}
+        {pestana === 'conocimiento' && <BaseConocimiento />}
       </div>
     </main>
   )
