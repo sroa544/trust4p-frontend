@@ -7,6 +7,22 @@ const DIMENSIONES = [
   { codigo: 'plataforma', nombre: 'Plataforma', descripcion: null, peso: '0.2500', orden: 4 },
 ]
 
+const EJES = [
+  ['EJE-A', 'Orientación al cambio', 'A', 'Abierta', 'B', 'Conservadora', 'proposito'],
+  ['EJE-B', 'Forma de decidir', 'C', 'Colaborativa', 'D', 'Jerárquica', 'procesos'],
+  ['EJE-C', 'Relación con el talento', 'E', 'Empoderada', 'F', 'Controlada', 'personas'],
+  ['EJE-D', 'Uso de la tecnología', 'G', 'Habilitadora', 'H', 'De soporte', 'plataforma'],
+].map(([codigo, nombre, altoC, altoN, bajoC, bajoN, dimension]) => ({
+  codigo,
+  nombre,
+  polo_alto_codigo: altoC,
+  polo_alto_nombre: altoN,
+  polo_bajo_codigo: bajoC,
+  polo_bajo_nombre: bajoN,
+  dimension_codigo: dimension,
+  umbral: '50.0000',
+}))
+
 const PREGUNTAS = [
   {
     codigo: 'PROP-01',
@@ -35,7 +51,7 @@ export const MODELO_PUBLICADO = {
   dimensiones: DIMENSIONES,
   preguntas: PREGUNTAS,
   niveles: [],
-  ejes_perfil_cultural: [],
+  ejes_perfil_cultural: EJES,
 }
 
 export const MODELO_BORRADOR = { ...MODELO_PUBLICADO, id: 'm-2', version: '2026.2', publicado: false }
