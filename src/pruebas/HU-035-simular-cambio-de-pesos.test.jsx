@@ -18,6 +18,8 @@ vi.mock('../servicios/modelos', () => ({
   editarDimension: vi.fn(),
   agregarDimension: vi.fn(),
   quitarDimension: vi.fn(),
+  agregarPregunta: vi.fn(),
+  editarPregunta: vi.fn(),
   desactivarPregunta: vi.fn(),
   reactivarPregunta: vi.fn(),
   simularPesos: vi.fn(),

@@ -2,12 +2,15 @@ import { useCallback, useEffect, useState } from 'react'
 import Aviso from '../componentes/Aviso.jsx'
 import { CLASE_ENTRADA } from '../componentes/TarjetaPublica.jsx'
 import { mensajeDeError } from '../servicios/api'
+import FormularioPregunta from '../componentes/FormularioPregunta.jsx'
 import {
   agregarDimension,
+  agregarPregunta,
   consultarModelo,
   crearNuevaVersion,
   desactivarPregunta,
   editarDimension,
+  editarPregunta,
   listarModelos,
   publicarModelo,
   quitarDimension,
@@ -211,6 +214,9 @@ function PestanaModelo({ estado }) {
   const [mensaje, setMensaje] = useState({ tipo: 'info', texto: '' })
   const [pesos, setPesos] = useState({})
   const [nueva, setNueva] = useState(DIMENSION_VACIA)
+  // null = sin formulario; 'nueva' = alta; un código = edición de esa pregunta.
+  const [edicion, setEdicion] = useState(null)
+  const [guardandoPregunta, setGuardandoPregunta] = useState(false)
 
   useEffect(() => {
     if (modelo) setPesos(Object.fromEntries(modelo.dimensiones.map((d) => [d.codigo, String(Number(d.peso))])))
@@ -249,7 +255,7 @@ function PestanaModelo({ estado }) {
   }
 
   async function quitar(d) {
-    const aviso = `¿Quitar la dimensión «${d.nombre}» de este borrador? Sus preguntas deberán reasignarse o desactivarse antes de publicar.`
+    const aviso = `¿Quitar la dimensión «${d.nombre}» de este borrador? Se elimina de la versión (no queda inactiva) y solo es posible si ya no tiene preguntas activas.`
     if (!window.confirm(aviso)) return
     await ejecutar(() => quitarDimension(modelo.id, d.codigo), 'Dimensión quitada del borrador.')
   }
@@ -261,6 +267,17 @@ function PestanaModelo({ estado }) {
       'Dimensión agregada. Ajuste los pesos para que sumen 1.',
     )
     if (creada) setNueva(DIMENSION_VACIA)
+  }
+
+  async function guardarPregunta(cuerpo, codigo) {
+    setGuardandoPregunta(true)
+    const creando = edicion === 'nueva'
+    const resultado = await ejecutar(
+      () => (creando ? agregarPregunta(modelo.id, cuerpo) : editarPregunta(modelo.id, edicion, cuerpo)),
+      creando ? `Pregunta ${codigo} agregada.` : `Pregunta ${edicion} actualizada.`,
+    )
+    setGuardandoPregunta(false)
+    if (resultado) setEdicion(null)
   }
 
   const suma = Object.values(pesos).reduce((acc, p) => acc + (Number(p) || 0), 0)
@@ -362,12 +379,28 @@ function PestanaModelo({ estado }) {
           </section>
 
           <section className="bg-surface-container-lowest rounded-xl shadow-sm overflow-x-auto">
-            <div className="p-space-lg">
-              <h2 className="font-headline-md text-headline-md font-bold">Banco de preguntas</h2>
-              <p className="font-body-sm text-body-sm text-on-surface-variant">
-                {modelo.preguntas.length} preguntas. {borrador ? 'Puede activar o desactivar preguntas.' : 'Solo lectura.'}
-              </p>
+            <div className="p-space-lg flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 className="font-headline-md text-headline-md font-bold">Banco de preguntas</h2>
+                <p className="font-body-sm text-body-sm text-on-surface-variant">
+                  {modelo.preguntas.length} preguntas.{' '}
+                  {borrador ? 'Puede agregar, editar, activar o desactivar preguntas.' : 'Solo lectura.'}
+                </p>
+              </div>
+              {borrador && edicion === null && (
+                <button className={BOTON_PRIMARIO} onClick={() => setEdicion('nueva')} type="button">Agregar pregunta</button>
+              )}
             </div>
+            {borrador && edicion !== null && (
+              <FormularioPregunta
+                alCancelar={() => setEdicion(null)}
+                alGuardar={guardarPregunta}
+                guardando={guardandoPregunta}
+                key={edicion}
+                modelo={modelo}
+                pregunta={edicion === 'nueva' ? null : modelo.preguntas.find((p) => p.codigo === edicion)}
+              />
+            )}
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-surface-container-low font-label-caps text-label-caps uppercase tracking-wider">
@@ -393,18 +426,24 @@ function PestanaModelo({ estado }) {
                     <td className="py-3 px-4">{p.activo ? 'Activa' : 'Inactiva'}</td>
                     <td className="py-3 px-4">
                       {borrador && (
-                        <button
-                          className={BOTON}
-                          onClick={() =>
-                            ejecutar(
-                              () => (p.activo ? desactivarPregunta(modelo.id, p.codigo) : reactivarPregunta(modelo.id, p.codigo)),
-                              p.activo ? 'Pregunta desactivada.' : 'Pregunta reactivada.',
-                            )
-                          }
-                          type="button"
-                        >
-                          {p.activo ? 'Desactivar' : 'Reactivar'}
-                        </button>
+                        <div className="flex gap-2">
+                          <button aria-label={`Editar ${p.codigo}`} className={BOTON} onClick={() => setEdicion(p.codigo)} type="button">
+                            Editar
+                          </button>
+                          <button
+                            aria-label={`${p.activo ? 'Desactivar' : 'Reactivar'} ${p.codigo}`}
+                            className={BOTON}
+                            onClick={() =>
+                              ejecutar(
+                                () => (p.activo ? desactivarPregunta(modelo.id, p.codigo) : reactivarPregunta(modelo.id, p.codigo)),
+                                p.activo ? 'Pregunta desactivada.' : 'Pregunta reactivada.',
+                              )
+                            }
+                            type="button"
+                          >
+                            {p.activo ? 'Desactivar' : 'Reactivar'}
+                          </button>
+                        </div>
                       )}
                     </td>
                   </tr>

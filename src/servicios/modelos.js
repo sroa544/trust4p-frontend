@@ -29,7 +29,10 @@ export const quitarDimension = (id, codigo) =>
 export const editarDimension =(id, codigo, cambios) =>
   solicitar(`/modelos-madurez/${id}/dimensiones/${codigo}`, { metodo: 'PATCH', cuerpo: cambios })
 
-export const editarPregunta = (id, codigo, cambios) =>
+export const agregarPregunta = (id, pregunta) =>
+  solicitar(`/modelos-madurez/${id}/preguntas`, { metodo: 'POST', cuerpo: pregunta })
+
+export const editarPregunta =(id, codigo, cambios) =>
   solicitar(`/modelos-madurez/${id}/preguntas/${codigo}`, { metodo: 'PATCH', cuerpo: cambios })
 
 export const desactivarPregunta = (id, codigo) =>
