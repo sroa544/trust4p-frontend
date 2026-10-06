@@ -16,6 +16,8 @@ vi.mock('../servicios/modelos', () => ({
   crearNuevaVersion: vi.fn(),
   publicarModelo: vi.fn(),
   editarDimension: vi.fn(),
+  agregarDimension: vi.fn(),
+  quitarDimension: vi.fn(),
   desactivarPregunta: vi.fn(),
   reactivarPregunta: vi.fn(),
   simularPesos: vi.fn(),
@@ -103,5 +105,78 @@ describe('HU-031 · Definir dimensiones', () => {
 
     await waitFor(() => expect(modelos.crearNuevaVersion).toHaveBeenCalledWith(MODELO_PUBLICADO.id))
     expect(await screen.findByText(/nueva versión en borrador/i)).toBeInTheDocument()
+  })
+
+  describe('gestión de dimensiones del borrador', () => {
+    it('una versión publicada no ofrece crear, renombrar ni quitar dimensiones', async () => {
+      await abrirModelo(MODELO_PUBLICADO)
+
+      expect(screen.queryByRole('button', { name: /Agregar dimensión/i })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: /Quitar/i })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: /Renombrar/i })).not.toBeInTheDocument()
+    })
+
+    it('agrega una dimensión nueva con el siguiente orden cuando no se indica', async () => {
+      modelos.agregarDimension.mockResolvedValue({})
+      const usuario = await abrirModelo(MODELO_BORRADOR)
+
+      await usuario.type(screen.getByLabelText('Código'), 'clientes')
+      await usuario.type(screen.getByLabelText('Nombre'), 'Clientes')
+      await usuario.type(screen.getByLabelText('Peso'), '0.1')
+      await usuario.click(screen.getByRole('button', { name: /^Agregar dimensión$/i }))
+
+      await waitFor(() =>
+        expect(modelos.agregarDimension).toHaveBeenCalledWith(MODELO_BORRADOR.id, {
+          codigo: 'clientes',
+          nombre: 'Clientes',
+          peso: '0.1',
+          orden: 5,
+          descripcion: '',
+        }),
+      )
+      expect(await screen.findByText(/Dimensión agregada/i)).toBeInTheDocument()
+    })
+
+    it('muestra el mensaje del servidor si la dimensión ya existe', async () => {
+      modelos.agregarDimension.mockRejectedValue(new ErrorApi(400, "Ya existe una dimensión con código 'clientes' en esta versión"))
+      const usuario = await abrirModelo(MODELO_BORRADOR)
+
+      await usuario.type(screen.getByLabelText('Código'), 'clientes')
+      await usuario.type(screen.getByLabelText('Nombre'), 'Clientes')
+      await usuario.type(screen.getByLabelText('Peso'), '0.1')
+      await usuario.click(screen.getByRole('button', { name: /^Agregar dimensión$/i }))
+
+      expect(await screen.findByRole('alert')).toHaveTextContent(/Ya existe una dimensión/i)
+    })
+
+    it('quita una dimensión solo después de confirmar', async () => {
+      modelos.quitarDimension.mockResolvedValue({})
+      const confirmar = vi.spyOn(window, 'confirm')
+      const usuario = await abrirModelo(MODELO_BORRADOR)
+
+      confirmar.mockReturnValueOnce(false)
+      await usuario.click(screen.getByRole('button', { name: 'Quitar Plataforma' }))
+      expect(modelos.quitarDimension).not.toHaveBeenCalled()
+
+      confirmar.mockReturnValueOnce(true)
+      await usuario.click(screen.getByRole('button', { name: 'Quitar Plataforma' }))
+      await waitFor(() => expect(modelos.quitarDimension).toHaveBeenCalledWith(MODELO_BORRADOR.id, 'plataforma'))
+      confirmar.mockRestore()
+    })
+
+    it('renombra una dimensión', async () => {
+      modelos.editarDimension.mockResolvedValue({})
+      const pregunta = vi.spyOn(window, 'prompt').mockReturnValue('Propósito estratégico')
+      const usuario = await abrirModelo(MODELO_BORRADOR)
+
+      await usuario.click(screen.getByRole('button', { name: 'Renombrar Propósito' }))
+
+      await waitFor(() =>
+        expect(modelos.editarDimension).toHaveBeenCalledWith(MODELO_BORRADOR.id, 'proposito', {
+          nombre: 'Propósito estratégico',
+        }),
+      )
+      pregunta.mockRestore()
+    })
   })
 })

@@ -43,7 +43,6 @@ export const ACCESOS = [
     descripcion: 'Responder el instrumento de madurez de innovación por dimensiones.',
     icono: 'assignment',
     roles: ['A2'],
-    historia: 'HU-008',
   },
   {
     id: 'resultados',
@@ -52,7 +51,6 @@ export const ACCESOS = [
     descripcion: 'Índice global, nivel de madurez, perfil de cultura, lienzo y puntaje por dimensión.',
     icono: 'insights',
     roles: ['A2'],
-    historia: 'HU-013, HU-018',
   },
   {
     id: 'plan',
@@ -61,7 +59,6 @@ export const ACCESOS = [
     descripcion: 'Recomendaciones del agente y de su consultor, por dimensión.',
     icono: 'route',
     roles: ['A2'],
-    historia: 'HU-017',
   },
   {
     id: 'historial',
@@ -70,7 +67,6 @@ export const ACCESOS = [
     descripcion: 'Variación del índice y de cada dimensión entre diagnósticos.',
     icono: 'trending_up',
     roles: ['A2'],
-    historia: 'HU-019',
   },
   {
     id: 'empresas-asignadas',
@@ -79,7 +75,6 @@ export const ACCESOS = [
     descripcion: 'Empresas acompañadas con el estado y el nivel de su diagnóstico más reciente.',
     icono: 'apartment',
     roles: ['A3'],
-    historia: 'HU-020, HU-021, HU-022, HU-024',
   },
   {
     id: 'indicadores',
@@ -88,7 +83,6 @@ export const ACCESOS = [
     descripcion: 'Comportamiento del portafolio por sector, tamaño y nivel de madurez.',
     icono: 'leaderboard',
     roles: ['A3', 'A4'],
-    historia: 'HU-023',
   },
   {
     id: 'gestion',
@@ -97,7 +91,6 @@ export const ACCESOS = [
     descripcion: 'Solicitudes de acceso, ponderación del modelo, banco de preguntas y simulación.',
     icono: 'tune',
     roles: ['A4'],
-    historia: 'HU-002, HU-029, HU-031, HU-035',
   },
   {
     id: 'usuarios',
@@ -106,7 +99,6 @@ export const ACCESOS = [
     descripcion: 'Alta de usuarios y empresas, asignación de consultores y control de roles.',
     icono: 'manage_accounts',
     roles: ['A4'],
-    historia: 'HU-025, HU-026, HU-027, HU-028',
   },
   {
     id: 'auditoria',
@@ -115,7 +107,6 @@ export const ACCESOS = [
     descripcion: 'Bitácora de acciones y ejecuciones del agente de evaluación.',
     icono: 'verified_user',
     roles: ['A4'],
-    historia: 'HU-030, HU-037',
   },
   {
     id: 'perfil',
@@ -124,7 +115,6 @@ export const ACCESOS = [
     descripcion: 'Datos de perfil, cambio de contraseña y eliminación de datos personales.',
     icono: 'account_circle',
     roles: ['A2', 'A3', 'A4'],
-    historia: 'HU-006',
   },
 ]
 

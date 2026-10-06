@@ -434,9 +434,9 @@ function FilasModulo({ modulo, permisos, roles, ejecutar }) {
 }
 
 const PESTANAS = [
-  { id: 'usuarios', texto: 'Usuarios', historia: 'HU-025, HU-026' },
-  { id: 'empresas', texto: 'Empresas', historia: 'HU-025' },
-  { id: 'permisos', texto: 'Roles y permisos', historia: 'HU-027, HU-028' },
+  { id: 'usuarios', texto: 'Usuarios' },
+  { id: 'empresas', texto: 'Empresas' },
+  { id: 'permisos', texto: 'Roles y permisos' },
 ]
 
 // HU-025 a HU-028: administración de usuarios, empresas, asignaciones y permisos.
