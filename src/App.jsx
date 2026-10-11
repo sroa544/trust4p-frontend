@@ -20,6 +20,7 @@ import Consultoria from './paginas/Consultoria.jsx'
 import ConsultoriaEmpresa from './paginas/ConsultoriaEmpresa.jsx'
 import ConsultoriaDiagnostico from './paginas/ConsultoriaDiagnostico.jsx'
 import Indicadores from './paginas/Indicadores.jsx'
+import InformesEmpresas from './paginas/InformesEmpresas.jsx'
 import PanelAuditoria from './paginas/PanelAuditoria.jsx'
 import GestionCalibracion from './paginas/GestionCalibracion.jsx'
 import Usuarios from './paginas/Usuarios.jsx'
@@ -65,6 +66,7 @@ export default function App() {
         <Route path="/consultoria/empresas/:empresaId" element={<Protegida roles={['A3']}><ConsultoriaEmpresa /></Protegida>} />
         <Route path="/consultoria/diagnosticos/:id" element={<Protegida roles={['A3']}><ConsultoriaDiagnostico /></Protegida>} />
         <Route path="/indicadores" element={<Protegida roles={['A3', 'A4']}><Indicadores /></Protegida>} />
+        <Route path="/informes" element={<Protegida roles={['A3', 'A4']}><InformesEmpresas /></Protegida>} />
 
         <Route path="/gestion" element={<Protegida roles={['A4']}><GestionCalibracion /></Protegida>} />
         <Route path="/usuarios" element={<Protegida roles={['A4']}><Usuarios /></Protegida>} />
