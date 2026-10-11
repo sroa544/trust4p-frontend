@@ -24,6 +24,7 @@ vi.mock('../servicios/modelos', () => ({
   agregarPregunta: vi.fn(),
   editarPregunta: vi.fn(),
   editarEje: vi.fn(),
+  agregarEje: vi.fn(),
   desactivarPregunta: vi.fn(),
   reactivarPregunta: vi.fn(),
   simularPesos: vi.fn(),
@@ -68,14 +69,14 @@ describe('Ejes del perfil de cultura', () => {
     await usuario.click(eje.getByRole('button', { name: 'Guardar eje' }))
 
     await waitFor(() =>
-      expect(modelos.editarEje).toHaveBeenCalledWith(MODELO_BORRADOR.id, 'EJE-A', {
+      expect(modelos.editarEje).toHaveBeenCalledWith(MODELO_BORRADOR.id, 'extroversion', {
         dimension_codigo: 'plataforma',
         umbral: '50',
         polo_alto_nombre: 'Abierta',
         polo_bajo_nombre: 'Conservadora',
       }),
     )
-    expect(await screen.findByText(/Eje EJE-A actualizado/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Eje extroversion actualizado/i)).toBeInTheDocument()
   })
 
   it('el botón de guardar solo se habilita cuando hay cambios', async () => {
@@ -107,6 +108,59 @@ describe('Ejes del perfil de cultura', () => {
     await abrir(huerfano)
 
     expect(screen.getByText(/La dimensión «fantasma» ya no existe/i)).toBeInTheDocument()
+  })
+
+  describe('ejes que faltan en la versión', () => {
+    const SIN_EJES = { ...MODELO_BORRADOR, ejes_perfil_cultural: [] }
+
+    it('ofrece configurar los cuatro ejes con sus valores habituales', async () => {
+      await abrir(SIN_EJES)
+
+      for (const nombre of ['Extroversión', 'Intuición', 'Sentimiento', 'Percepción']) {
+        expect(screen.getByRole('form', { name: `Configurar eje ${nombre}` })).toBeInTheDocument()
+      }
+      const eje = within(screen.getByRole('form', { name: 'Configurar eje Intuición' }))
+      expect(eje.getByLabelText('Código del polo alto')).toHaveValue('N')
+      expect(eje.getByLabelText('Nombre del polo bajo')).toHaveValue('Sensorial')
+    })
+
+    it('configura un eje con la dimensión elegida, incluida una nueva', async () => {
+      modelos.agregarEje.mockResolvedValue({})
+      const usuario = await abrir({
+        ...SIN_EJES,
+        dimensiones: [...SIN_EJES.dimensiones, { codigo: 'clientes', nombre: 'Clientes', descripcion: null, peso: '0.1', orden: 5 }],
+      })
+      const eje = within(screen.getByRole('form', { name: 'Configurar eje Extroversión' }))
+
+      await usuario.selectOptions(eje.getByLabelText(/Dimensión que determina este eje/), 'clientes')
+      await usuario.click(eje.getByRole('button', { name: 'Configurar eje' }))
+
+      await waitFor(() =>
+        expect(modelos.agregarEje).toHaveBeenCalledWith(MODELO_BORRADOR.id, {
+          codigo: 'extroversion',
+          nombre: 'Extroversión',
+          dimension_codigo: 'clientes',
+          umbral: '62.5',
+          polo_alto_codigo: 'E',
+          polo_alto_nombre: 'Extrovertida',
+          polo_bajo_codigo: 'I',
+          polo_bajo_nombre: 'Introvertida',
+        }),
+      )
+      expect(await screen.findByText(/Eje Extroversión configurado/i)).toBeInTheDocument()
+    })
+
+    it('solo configura los ejes que faltan', async () => {
+      await abrir({ ...MODELO_BORRADOR, ejes_perfil_cultural: MODELO_BORRADOR.ejes_perfil_cultural.slice(0, 3) })
+
+      expect(screen.getAllByRole('form', { name: /^Configurar eje / })).toHaveLength(1)
+    })
+
+    it('una versión publicada no ofrece configurar ejes', async () => {
+      await abrir({ ...MODELO_PUBLICADO, ejes_perfil_cultural: [] })
+
+      expect(screen.queryByRole('form', { name: /^Configurar eje / })).not.toBeInTheDocument()
+    })
   })
 
   it('muestra el mensaje del servidor si no se puede guardar el eje', async () => {

@@ -11,10 +11,13 @@ export const crearNuevaVersion = (id) => solicitar(`/modelos-madurez/${id}/nueva
 
 // Cada eje del perfil de cultura se determina con una dimensión (RF-14): se
 // puede reasignar a cualquier dimensión de la versión en borrador.
+export const agregarEje = (id, eje) =>
+  solicitar(`/modelos-madurez/${id}/ejes-perfil-cultural`, { metodo: 'POST', cuerpo: eje })
+
 export const editarEje = (id, codigo, cambios) =>
   solicitar(`/modelos-madurez/${id}/ejes-perfil-cultural/${codigo}`, { metodo: 'PATCH', cuerpo: cambios })
 
-export const publicarModelo =(id) => solicitar(`/modelos-madurez/${id}/publicar`, { metodo: 'POST' })
+export const publicarModelo = (id) => solicitar(`/modelos-madurez/${id}/publicar`, { metodo: 'POST' })
 
 export const agregarDimension = (id, datos) =>
   solicitar(`/modelos-madurez/${id}/dimensiones`, {

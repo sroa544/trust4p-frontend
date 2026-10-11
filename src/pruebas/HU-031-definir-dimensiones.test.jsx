@@ -21,6 +21,7 @@ vi.mock('../servicios/modelos', () => ({
   agregarPregunta: vi.fn(),
   editarPregunta: vi.fn(),
   editarEje: vi.fn(),
+  agregarEje: vi.fn(),
   desactivarPregunta: vi.fn(),
   reactivarPregunta: vi.fn(),
   simularPesos: vi.fn(),
