@@ -5,19 +5,19 @@ import { useSesion } from '../hooks/useSesion'
 
 const CLIENTE = import.meta.env.VITE_BOTPRESS_CLIENT_ID
 
-const RUTAS_CON_ASISTENTE = [
-  '/diagnostico',
-  '/resultados',
-  '/plan',
-  '/historial',
-  '/auditoria',
-]
+// Pantallas donde se ofrece el asistente, según el actor de la sesión: el
+// representante lo tiene en las de su diagnóstico y el administrador en todas
+// las de administración. El consultor no lo usa.
+const RUTAS_CON_ASISTENTE = {
+  A2: ['/diagnostico', '/resultados', '/plan', '/historial'],
+  A4: ['/panel', '/indicadores', '/informes', '/gestion', '/usuarios', '/auditoria', '/perfil'],
+}
 
 export default function AsistenteChat() {
   const { pathname } = useLocation()
-  const { estado, perfil } = useSesion()
+  const { estado, perfil, rol } = useSesion()
 
-  const disponible = RUTAS_CON_ASISTENTE.some((ruta) => pathname.startsWith(ruta))
+  const disponible = (RUTAS_CON_ASISTENTE[rol] ?? []).some((ruta) => pathname.startsWith(ruta))
 
   if (!CLIENTE || !disponible) return null
   if (estado !== 'autenticado' || !perfil?.id) return null
