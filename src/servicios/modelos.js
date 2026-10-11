@@ -17,6 +17,17 @@ export const agregarEje = (id, eje) =>
 export const editarEje = (id, codigo, cambios) =>
   solicitar(`/modelos-madurez/${id}/ejes-perfil-cultural/${codigo}`, { metodo: 'PATCH', cuerpo: cambios })
 
+// Catálogo de perfiles de cultura (RF-14): nombre y descripción de cada
+// combinación de polos, definidos por versión.
+export const agregarPerfilCultura = (id, perfil) =>
+  solicitar(`/modelos-madurez/${id}/perfiles-cultura`, { metodo: 'POST', cuerpo: perfil })
+
+export const editarPerfilCultura = (id, codigo, cambios) =>
+  solicitar(`/modelos-madurez/${id}/perfiles-cultura/${codigo}`, { metodo: 'PATCH', cuerpo: cambios })
+
+export const quitarPerfilCultura = (id, codigo) =>
+  solicitar(`/modelos-madurez/${id}/perfiles-cultura/${codigo}`, { metodo: 'DELETE' })
+
 export const publicarModelo = (id) => solicitar(`/modelos-madurez/${id}/publicar`, { metodo: 'POST' })
 
 export const agregarDimension = (id, datos) =>
