@@ -7,21 +7,26 @@ import BaseConocimiento from '../componentes/BaseConocimiento.jsx'
 import EjesPerfilCultura from '../componentes/EjesPerfilCultura.jsx'
 import FormularioPregunta from '../componentes/FormularioPregunta.jsx'
 import PerfilesCultura from '../componentes/PerfilesCultura.jsx'
+import RubricaNiveles from '../componentes/RubricaNiveles.jsx'
 import {
   agregarDimension,
   agregarEje,
+  agregarNivel,
   agregarPerfilCultura,
   agregarPregunta,
+  aplicarRubricaEstandar,
   consultarModelo,
   crearNuevaVersion,
   desactivarPregunta,
   editarDimension,
   editarEje,
+  editarNivel,
   editarPerfilCultura,
   editarPregunta,
   listarModelos,
   publicarModelo,
   quitarDimension,
+  quitarNivel,
   quitarPerfilCultura,
   reactivarPregunta,
   simularPesos,
@@ -406,6 +411,22 @@ function PestanaModelo({ estado }) {
               </form>
             )}
           </section>
+
+          <RubricaNiveles
+            alAgregar={async (nivel) =>
+              (await ejecutar(() => agregarNivel(modelo.id, nivel), `Nivel ${nivel.nivel} agregado.`)) !== null
+            }
+            alAplicarEstandar={async () =>
+              (await ejecutar(() => aplicarRubricaEstandar(modelo.id), 'Se aplicaron los 10 niveles estándar.')) !== null
+            }
+            alEditar={async (numero, cambios) =>
+              (await ejecutar(() => editarNivel(modelo.id, numero, cambios), `Nivel ${numero} actualizado.`)) !== null
+            }
+            alQuitar={(numero) => ejecutar(() => quitarNivel(modelo.id, numero), `Nivel ${numero} quitado.`)}
+            editable={Boolean(borrador)}
+            error={mensaje.tipo === 'error' ? mensaje.texto : ''}
+            modelo={modelo}
+          />
 
           <EjesPerfilCultura
             alGuardar={(codigo, cambios) => ejecutar(() => editarEje(modelo.id, codigo, cambios), `Eje ${codigo} actualizado.`)}

@@ -34,7 +34,7 @@ function Dialogo({ titulo, onCerrar, children }) {
   )
 }
 
-// Formulario de edición. `campos`: [{ nombre, etiqueta, valor, tipo?, min?, maxLength?, requerido?,
+// Formulario de edición. `campos`: [{ nombre, etiqueta, valor, tipo?, min?, step?, maxLength?, requerido?,
 // opciones?, deshabilitado?, visibleSi?, ayuda? }]. `tipo` puede ser 'textarea' (texto largo) o 'select'
 // (con `opciones: [{ valor, texto }]`); `visibleSi(valores)` muestra el campo solo cuando aplica y
 // `ayuda(valores)` devuelve una nota opcional bajo el campo.
@@ -99,6 +99,7 @@ export function DialogoEdicion({ titulo, campos, error = '', onGuardar, onCerrar
                 id={`${prefijo}-${c.nombre}`}
                 maxLength={c.maxLength}
                 min={c.min}
+                step={c.step}
                 onChange={(e) => setValores({ ...valores, [c.nombre]: e.target.value })}
                 ref={i === 0 ? primero : undefined}
                 required={c.requerido}
