@@ -34,8 +34,10 @@ function Dialogo({ titulo, onCerrar, children }) {
   )
 }
 
-// Formulario de edición. `campos`: [{ nombre, etiqueta, valor, tipo?, min?, maxLength?, requerido? }];
-// `tipo` puede ser 'textarea' para un texto largo.
+// Formulario de edición. `campos`: [{ nombre, etiqueta, valor, tipo?, min?, maxLength?, requerido?,
+// opciones?, deshabilitado?, visibleSi?, ayuda? }]. `tipo` puede ser 'textarea' (texto largo) o 'select'
+// (con `opciones: [{ valor, texto }]`); `visibleSi(valores)` muestra el campo solo cuando aplica y
+// `ayuda(valores)` devuelve una nota opcional bajo el campo.
 // `onGuardar(valores)` devuelve true si todo salió bien (entonces se cierra); si
 // no, la ventana sigue abierta y muestra `error`.
 export function DialogoEdicion({ titulo, campos, error = '', onGuardar, onCerrar }) {
@@ -60,10 +62,27 @@ export function DialogoEdicion({ titulo, campos, error = '', onGuardar, onCerrar
   return (
     <Dialogo onCerrar={onCerrar} titulo={titulo}>
       <form className="flex flex-col gap-4" onSubmit={enviar}>
-        {campos.map((c, i) => (
-          <label className="flex flex-col gap-1 font-label-md text-label-md text-on-surface" htmlFor={`${prefijo}-${c.nombre}`} key={c.nombre}>
+        {campos.map((c, i) => (c.visibleSi && !c.visibleSi(valores) ? null : (
+          <div className="flex flex-col gap-1" key={c.nombre}>
+          <label className="flex flex-col gap-1 font-label-md text-label-md text-on-surface" htmlFor={`${prefijo}-${c.nombre}`}>
             {c.etiqueta}
-            {c.tipo === 'textarea' ? (
+            {c.tipo === 'select' ? (
+              <select
+                className={`${CLASE_ENTRADA} disabled:opacity-60`}
+                aria-describedby={c.ayuda?.(valores) ? `${prefijo}-${c.nombre}-ayuda` : undefined}
+                disabled={c.deshabilitado}
+                id={`${prefijo}-${c.nombre}`}
+                onChange={(e) => setValores({ ...valores, [c.nombre]: e.target.value })}
+                ref={i === 0 ? primero : undefined}
+                required={c.requerido}
+                value={valores[c.nombre]}
+              >
+                {c.vacio && <option value="">{c.vacio}</option>}
+                {c.opciones.map((o) => (
+                  <option key={o.valor} value={o.valor}>{o.texto}</option>
+                ))}
+              </select>
+            ) : c.tipo === 'textarea' ? (
               <textarea
                 className={`${CLASE_ENTRADA} h-auto py-3 resize-y`}
                 id={`${prefijo}-${c.nombre}`}
@@ -88,7 +107,13 @@ export function DialogoEdicion({ titulo, campos, error = '', onGuardar, onCerrar
               />
             )}
           </label>
-        ))}
+          {c.ayuda?.(valores) && (
+            <span className="font-body-sm text-body-sm text-on-surface-variant" id={`${prefijo}-${c.nombre}-ayuda`}>
+              {c.ayuda(valores)}
+            </span>
+          )}
+          </div>
+        )))}
         <Aviso tipo="error">{error}</Aviso>
         <div className="flex justify-end gap-2">
           <button className={BOTON} onClick={onCerrar} type="button">Cancelar</button>

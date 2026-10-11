@@ -95,10 +95,16 @@ function PestanaUsuarios({ empresas }) {
     if (ok) setNuevo({ correo: '', nombres: '', apellidos: '', rol: 'representante', empresaId: '' })
   }
 
-  function renombrar({ nombres, apellidos }) {
+  // Solo se envía lo que cambió: el servidor revalida el rol y la empresa cuando
+  // vienen en la petición.
+  function guardarEdicion({ nombres, apellidos, rol, empresa }) {
+    const cambios = { nombres: nombres.trim(), apellidos: apellidos.trim() }
+    const cambiaRol = rol !== editando.rol_codigo
+    if (cambiaRol) cambios.rol_codigo = rol
+    if (rol === 'representante' && (cambiaRol || empresa !== editando.empresa_id)) cambios.empresa_id = empresa
     return ejecutar(
-      () => editarUsuario(editando.id, { nombres: nombres.trim(), apellidos: apellidos.trim() }),
-      'Usuario actualizado.',
+      () => editarUsuario(editando.id, cambios),
+      cambiaRol || cambios.empresa_id ? 'Usuario actualizado; se cerró su sesión abierta.' : 'Usuario actualizado.',
     )
   }
 
@@ -223,12 +229,14 @@ function PestanaUsuarios({ empresas }) {
                 <td className="py-3 px-4 capitalize">{u.rol_codigo}</td>
                 <td className="py-3 px-4">{u.empresa_id ? nombreEmpresa(u.empresa_id) : '—'}</td>
                 <td className="py-3 px-4">
-                  {u.registro_pendiente ? 'Invitación pendiente' : u.activo ? 'Activo' : 'Inactivo'}
+                  {u.registro_pendiente ? 'Invitación pendiente' : !u.activo ? 'Inactivo' : u.bloqueado ? 'Bloqueado' : 'Activo'}
                 </td>
                 <td className="py-3 px-4 whitespace-nowrap text-right">
                   <div className="flex flex-wrap gap-2 justify-end">
                     <button className={BOTON} onClick={() => setEditando(u)} type="button">Editar</button>
-                    <button className={BOTON} onClick={() => ejecutar(() => desbloquearUsuario(u.id), 'Cuenta desbloqueada.')} type="button">Desbloquear</button>
+                    {u.bloqueado && (
+                      <button className={BOTON} onClick={() => ejecutar(() => desbloquearUsuario(u.id), 'Cuenta desbloqueada.')} type="button">Desbloquear</button>
+                    )}
                     {u.activo ? (
                       <button
                         className={BOTON}
@@ -253,10 +261,36 @@ function PestanaUsuarios({ empresas }) {
           campos={[
             { nombre: 'nombres', etiqueta: 'Nombres', valor: editando.nombres, requerido: true },
             { nombre: 'apellidos', etiqueta: 'Apellidos', valor: editando.apellidos, requerido: true },
+            {
+              nombre: 'rol',
+              etiqueta: 'Rol',
+              tipo: 'select',
+              valor: editando.rol_codigo,
+              opciones: ROLES.map((r) => ({ valor: r.codigo, texto: r.nombre })),
+              deshabilitado: editando.id === perfil.id,
+              ayuda: (v) =>
+                editando.id === perfil.id
+                  ? 'No puede cambiar su propio rol.'
+                  : v.rol !== editando.rol_codigo
+                    ? 'Al cambiar el rol se cierra la sesión que el usuario tenga abierta.'
+                    : null,
+            },
+            {
+              nombre: 'empresa',
+              etiqueta: 'Empresa',
+              tipo: 'select',
+              valor: editando.empresa_id ?? '',
+              vacio: 'Seleccione…',
+              requerido: true,
+              visibleSi: (v) => v.rol === 'representante',
+              opciones: empresas
+                .filter((e) => e.activo || e.id === editando.empresa_id)
+                .map((e) => ({ valor: e.id, texto: e.nombre })),
+            },
           ]}
           error={mensaje.tipo === 'error' ? mensaje.texto : ''}
           onCerrar={() => setEditando(null)}
-          onGuardar={renombrar}
+          onGuardar={guardarEdicion}
           titulo="Editar usuario"
         />
       )}
