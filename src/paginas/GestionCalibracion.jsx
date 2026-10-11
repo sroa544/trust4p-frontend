@@ -7,6 +7,7 @@ import EjesPerfilCultura from '../componentes/EjesPerfilCultura.jsx'
 import FormularioPregunta from '../componentes/FormularioPregunta.jsx'
 import {
   agregarDimension,
+  agregarEje,
   agregarPregunta,
   consultarModelo,
   crearNuevaVersion,
@@ -383,6 +384,7 @@ function PestanaModelo({ estado }) {
 
           <EjesPerfilCultura
             alGuardar={(codigo, cambios) => ejecutar(() => editarEje(modelo.id, codigo, cambios), `Eje ${codigo} actualizado.`)}
+            alCrear={(eje) => ejecutar(() => agregarEje(modelo.id, eje), `Eje ${eje.nombre} configurado.`)}
             editable={Boolean(borrador)}
             modelo={modelo}
           />

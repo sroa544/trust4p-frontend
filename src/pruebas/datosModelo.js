@@ -8,10 +8,10 @@ const DIMENSIONES = [
 ]
 
 const EJES = [
-  ['EJE-A', 'Orientación al cambio', 'A', 'Abierta', 'B', 'Conservadora', 'proposito'],
-  ['EJE-B', 'Forma de decidir', 'C', 'Colaborativa', 'D', 'Jerárquica', 'procesos'],
-  ['EJE-C', 'Relación con el talento', 'E', 'Empoderada', 'F', 'Controlada', 'personas'],
-  ['EJE-D', 'Uso de la tecnología', 'G', 'Habilitadora', 'H', 'De soporte', 'plataforma'],
+  ['extroversion', 'Orientación al cambio', 'A', 'Abierta', 'B', 'Conservadora', 'proposito'],
+  ['intuicion', 'Forma de decidir', 'C', 'Colaborativa', 'D', 'Jerárquica', 'procesos'],
+  ['sentimiento', 'Relación con el talento', 'E', 'Empoderada', 'F', 'Controlada', 'personas'],
+  ['percepcion', 'Uso de la tecnología', 'G', 'Habilitadora', 'H', 'De soporte', 'plataforma'],
 ].map(([codigo, nombre, altoC, altoN, bajoC, bajoN, dimension]) => ({
   codigo,
   nombre,
