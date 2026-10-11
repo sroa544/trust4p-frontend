@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import Aviso from '../componentes/Aviso.jsx'
+import { DialogoEdicion } from '../componentes/Dialogo.jsx'
 import { CLASE_ENTRADA } from '../componentes/TarjetaPublica.jsx'
 import { useSesion } from '../hooks/useSesion'
 import { mensajeDeError } from '../servicios/api'
@@ -69,6 +70,7 @@ function PestanaUsuarios({ empresas }) {
   const [filtro, setFiltro] = useState({ empresa_id: '', rol: '', texto: '' })
   const [nuevo, setNuevo] = useState({ correo: '', nombres: '', apellidos: '', rol: 'representante', empresaId: '' })
   const [asignacion, setAsignacion] = useState({ consultorId: '', empresaId: '' })
+  const [editando, setEditando] = useState(null)
   const recargar = useCallback(
     () => listarUsuarios({ empresa_id: filtro.empresa_id }).then(setUsuarios),
     [filtro.empresa_id],
@@ -93,12 +95,11 @@ function PestanaUsuarios({ empresas }) {
     if (ok) setNuevo({ correo: '', nombres: '', apellidos: '', rol: 'representante', empresaId: '' })
   }
 
-  async function renombrar(u) {
-    const nombres = window.prompt('Nombres', u.nombres)
-    if (nombres === null) return
-    const apellidos = window.prompt('Apellidos', u.apellidos)
-    if (apellidos === null) return
-    await ejecutar(() => editarUsuario(u.id, { nombres, apellidos }), 'Usuario actualizado.')
+  function renombrar({ nombres, apellidos }) {
+    return ejecutar(
+      () => editarUsuario(editando.id, { nombres: nombres.trim(), apellidos: apellidos.trim() }),
+      'Usuario actualizado.',
+    )
   }
 
   return (
@@ -226,7 +227,7 @@ function PestanaUsuarios({ empresas }) {
                 </td>
                 <td className="py-3 px-4 whitespace-nowrap text-right">
                   <div className="flex flex-wrap gap-2 justify-end">
-                    <button className={BOTON} onClick={() => renombrar(u)} type="button">Editar</button>
+                    <button className={BOTON} onClick={() => setEditando(u)} type="button">Editar</button>
                     <button className={BOTON} onClick={() => ejecutar(() => desbloquearUsuario(u.id), 'Cuenta desbloqueada.')} type="button">Desbloquear</button>
                     {u.activo ? (
                       <button
@@ -247,6 +248,18 @@ function PestanaUsuarios({ empresas }) {
           </tbody>
         </table>
       </section>
+      {editando && (
+        <DialogoEdicion
+          campos={[
+            { nombre: 'nombres', etiqueta: 'Nombres', valor: editando.nombres, requerido: true },
+            { nombre: 'apellidos', etiqueta: 'Apellidos', valor: editando.apellidos, requerido: true },
+          ]}
+          error={mensaje.tipo === 'error' ? mensaje.texto : ''}
+          onCerrar={() => setEditando(null)}
+          onGuardar={renombrar}
+          titulo="Editar usuario"
+        />
+      )}
     </div>
   )
 }
@@ -254,6 +267,7 @@ function PestanaUsuarios({ empresas }) {
 function PestanaEmpresas({ sectores, empresas, recargarEmpresas }) {
   const [nueva, setNueva] = useState({ nit: '', nombre: '', sector: '', empleados: '', ciudad: '' })
   const [filtro, setFiltro] = useState('')
+  const [editando, setEditando] = useState(null)
   const [mensaje, ejecutar] = useAccion(recargarEmpresas)
 
   async function crear(e) {
@@ -263,13 +277,13 @@ function PestanaEmpresas({ sectores, empresas, recargarEmpresas }) {
     if (ok) setNueva({ nit: '', nombre: '', sector: '', empleados: '', ciudad: '' })
   }
 
-  async function editar(emp) {
-    const nombre = window.prompt('Nombre de la empresa', emp.nombre)
-    if (nombre === null) return
-    const empleados = window.prompt('Número de empleados', emp.numero_empleados ?? '')
-    if (empleados === null) return
-    await ejecutar(
-      () => editarEmpresa(emp.id, { nombre, numero_empleados: empleados === '' ? undefined : Number(empleados) }),
+  function editar({ nombre, empleados }) {
+    return ejecutar(
+      () =>
+        editarEmpresa(editando.id, {
+          nombre: nombre.trim(),
+          numero_empleados: empleados === '' ? undefined : Number(empleados),
+        }),
       'Empresa actualizada.',
     )
   }
@@ -336,7 +350,7 @@ function PestanaEmpresas({ sectores, empresas, recargarEmpresas }) {
                 <td className="py-3 px-4">{e.activo ? 'Activa' : 'Inactiva'}</td>
                 <td className="py-3 px-4 whitespace-nowrap text-right">
                   <div className="flex gap-2 justify-end">
-                    <button className={BOTON} onClick={() => editar(e)} type="button">Editar</button>
+                    <button className={BOTON} onClick={() => setEditando(e)} type="button">Editar</button>
                     {e.activo ? (
                       <button className={BOTON} onClick={() => ejecutar(() => desactivarEmpresa(e.id), 'Empresa desactivada.')} type="button">Desactivar</button>
                     ) : (
@@ -349,6 +363,18 @@ function PestanaEmpresas({ sectores, empresas, recargarEmpresas }) {
           </tbody>
         </table>
       </section>
+      {editando && (
+        <DialogoEdicion
+          campos={[
+            { nombre: 'nombre', etiqueta: 'Nombre de la empresa', valor: editando.nombre, requerido: true },
+            { nombre: 'empleados', etiqueta: 'Número de empleados', valor: editando.numero_empleados ?? '', tipo: 'number', min: 1 },
+          ]}
+          error={mensaje.tipo === 'error' ? mensaje.texto : ''}
+          onCerrar={() => setEditando(null)}
+          onGuardar={editar}
+          titulo="Editar empresa"
+        />
+      )}
     </div>
   )
 }

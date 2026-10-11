@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import GestionCalibracion from '../paginas/GestionCalibracion.jsx'
@@ -155,31 +155,39 @@ describe('HU-031 · Definir dimensiones', () => {
 
     it('quita una dimensión solo después de confirmar', async () => {
       modelos.quitarDimension.mockResolvedValue({})
-      const confirmar = vi.spyOn(window, 'confirm')
       const usuario = await abrirModelo(MODELO_BORRADOR)
 
-      confirmar.mockReturnValueOnce(false)
       await usuario.click(screen.getByRole('button', { name: 'Quitar Plataforma' }))
+      const dialogo = screen.getByRole('dialog')
+      expect(within(dialogo).getByText(/¿Quitar la dimensión «Plataforma»/)).toBeInTheDocument()
+      await usuario.click(within(dialogo).getByRole('button', { name: 'Cancelar' }))
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
       expect(modelos.quitarDimension).not.toHaveBeenCalled()
 
-      confirmar.mockReturnValueOnce(true)
       await usuario.click(screen.getByRole('button', { name: 'Quitar Plataforma' }))
+      await usuario.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Quitar' }))
       await waitFor(() => expect(modelos.quitarDimension).toHaveBeenCalledWith(MODELO_BORRADOR.id, 'plataforma'))
-      confirmar.mockRestore()
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     })
 
-    it('renombra una dimensión', async () => {
+    it('renombra una dimensión desde un formulario propio, sin cuadros del navegador', async () => {
       modelos.editarDimension.mockResolvedValue({})
-      const pregunta = vi.spyOn(window, 'prompt').mockReturnValue('Propósito estratégico')
+      const pregunta = vi.spyOn(window, 'prompt')
       const usuario = await abrirModelo(MODELO_BORRADOR)
 
       await usuario.click(screen.getByRole('button', { name: 'Renombrar Propósito' }))
+      const campoNombre = within(screen.getByRole('dialog')).getByLabelText('Nombre de la dimensión')
+      expect(campoNombre).toHaveValue('Propósito')
+      await usuario.clear(campoNombre)
+      await usuario.type(campoNombre, 'Propósito estratégico')
+      await usuario.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Guardar' }))
 
       await waitFor(() =>
         expect(modelos.editarDimension).toHaveBeenCalledWith(MODELO_BORRADOR.id, 'proposito', {
           nombre: 'Propósito estratégico',
         }),
       )
+      expect(pregunta).not.toHaveBeenCalled()
       pregunta.mockRestore()
     })
   })
