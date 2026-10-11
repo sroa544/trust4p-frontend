@@ -21,7 +21,21 @@ export const registrarRecomendacion = (id, datos) =>
       contenido: datos.contenido.trim(),
       dimension_codigo: datos.dimension || null,
       visible: datos.visible,
+      fecha_limite: datos.fecha_limite || null,
+      nivel_objetivo: datos.nivel_objetivo ?? null,
     },
   })
+
+// Plan de mejora: las recomendaciones son tareas que el consultor gestiona.
+// `cambios` lleva solo lo que cambia; fecha_limite en null la quita.
+export const editarTarea = (diagnosticoId, tareaId, cambios) =>
+  solicitar(`/consultoria/diagnosticos/${diagnosticoId}/recomendaciones/${tareaId}`, {
+    metodo: 'PATCH',
+    cuerpo: cambios,
+  })
+
+// Confirma que la empresa alcanzó el siguiente nivel (todas sus tareas completadas).
+export const avanzarNivel = (diagnosticoId) =>
+  solicitar(`/consultoria/diagnosticos/${diagnosticoId}/avanzar-nivel`, { metodo: 'POST' })
 
 export const cerrarDiagnostico = (id) => solicitar(`/diagnosticos/${id}/cerrar`, { metodo: 'POST' })

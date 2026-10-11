@@ -18,13 +18,13 @@ function Dialogo({ titulo, onCerrar, children }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-on-surface/40 p-margin-mobile"
+      className="fixed inset-0 z-50 flex overflow-y-auto bg-on-surface/40 p-margin-mobile"
       onMouseDown={(e) => e.target === e.currentTarget && onCerrar()}
     >
       <div
         aria-labelledby={idTitulo}
         aria-modal="true"
-        className="w-full max-w-md bg-surface-container-lowest rounded-xl shadow-lg p-space-lg flex flex-col gap-space-md"
+        className="m-auto w-full max-w-md bg-surface-container-lowest rounded-xl shadow-lg p-space-lg flex flex-col gap-space-md"
         role="dialog"
       >
         <h2 className="font-headline-md text-headline-md font-bold" id={idTitulo}>{titulo}</h2>
