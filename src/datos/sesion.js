@@ -85,6 +85,14 @@ export const ACCESOS = [
     roles: ['A3', 'A4'],
   },
   {
+    id: 'informes',
+    ruta: '/informes',
+    titulo: 'Informes por empresa',
+    descripcion: 'Consulte el resultado de cada empresa, fíltrelas y descargue su informe.',
+    icono: 'description',
+    roles: ['A3', 'A4'],
+  },
+  {
     id: 'gestion',
     ruta: '/gestion',
     titulo: 'Gestión y calibración',
