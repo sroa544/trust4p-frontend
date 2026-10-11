@@ -108,7 +108,7 @@ export default function PlanEstrategico() {
                   </div>
                 </div>
 
-                <p className="font-body-md text-body-md text-on-surface-variant mb-3">
+                <p className="font-body-md text-body-md text-on-surface-variant mb-3 whitespace-pre-line">
                   {d.observacion ?? 'La observación del agente para esta dimensión todavía no está disponible.'}
                 </p>
 
@@ -125,7 +125,7 @@ export default function PlanEstrategico() {
                             {r.origen === 'consultor' && r.autor_nombre ? ` · ${r.autor_nombre}` : ''}
                           </span>
                         </div>
-                        <p className="font-body-sm text-body-sm text-on-surface-variant mt-1 leading-relaxed">{r.contenido}</p>
+                        <p className="font-body-sm text-body-sm text-on-surface-variant mt-1 leading-relaxed whitespace-pre-line">{r.contenido}</p>
                         <span className="font-label-caps text-label-caps text-outline">{formatearFecha(r.creado_en)}</span>
                       </li>
                     ))}
@@ -148,7 +148,7 @@ export default function PlanEstrategico() {
                     {r.origen === 'consultor' && r.autor_nombre ? ` · ${r.autor_nombre}` : ''}
                   </span>
                 </div>
-                <p className="font-body-md text-body-md text-on-surface-variant mt-1">{r.contenido}</p>
+                <p className="font-body-md text-body-md text-on-surface-variant mt-1 whitespace-pre-line">{r.contenido}</p>
               </article>
             ))}
           </section>
