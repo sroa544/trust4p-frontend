@@ -34,7 +34,8 @@ function Dialogo({ titulo, onCerrar, children }) {
   )
 }
 
-// Formulario de edición. `campos`: [{ nombre, etiqueta, valor, tipo?, min?, requerido? }].
+// Formulario de edición. `campos`: [{ nombre, etiqueta, valor, tipo?, min?, maxLength?, requerido? }];
+// `tipo` puede ser 'textarea' para un texto largo.
 // `onGuardar(valores)` devuelve true si todo salió bien (entonces se cierra); si
 // no, la ventana sigue abierta y muestra `error`.
 export function DialogoEdicion({ titulo, campos, error = '', onGuardar, onCerrar }) {
@@ -62,16 +63,30 @@ export function DialogoEdicion({ titulo, campos, error = '', onGuardar, onCerrar
         {campos.map((c, i) => (
           <label className="flex flex-col gap-1 font-label-md text-label-md text-on-surface" htmlFor={`${prefijo}-${c.nombre}`} key={c.nombre}>
             {c.etiqueta}
-            <input
-              className={CLASE_ENTRADA}
-              id={`${prefijo}-${c.nombre}`}
-              min={c.min}
-              onChange={(e) => setValores({ ...valores, [c.nombre]: e.target.value })}
-              ref={i === 0 ? primero : undefined}
-              required={c.requerido}
-              type={c.tipo ?? 'text'}
-              value={valores[c.nombre]}
-            />
+            {c.tipo === 'textarea' ? (
+              <textarea
+                className={`${CLASE_ENTRADA} h-auto py-3 resize-y`}
+                id={`${prefijo}-${c.nombre}`}
+                maxLength={c.maxLength}
+                onChange={(e) => setValores({ ...valores, [c.nombre]: e.target.value })}
+                ref={i === 0 ? primero : undefined}
+                required={c.requerido}
+                rows={6}
+                value={valores[c.nombre]}
+              />
+            ) : (
+              <input
+                className={CLASE_ENTRADA}
+                id={`${prefijo}-${c.nombre}`}
+                maxLength={c.maxLength}
+                min={c.min}
+                onChange={(e) => setValores({ ...valores, [c.nombre]: e.target.value })}
+                ref={i === 0 ? primero : undefined}
+                required={c.requerido}
+                type={c.tipo ?? 'text'}
+                value={valores[c.nombre]}
+              />
+            )}
           </label>
         ))}
         <Aviso tipo="error">{error}</Aviso>

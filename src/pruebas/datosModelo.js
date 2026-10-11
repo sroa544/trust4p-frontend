@@ -23,6 +23,12 @@ const EJES = [
   umbral: '50.0000',
 }))
 
+// Combinaciones posibles de polos (el servidor las calcula con los cuatro ejes).
+const COMBINACIONES = EJES.reduce(
+  (previas, eje) => previas.flatMap((c) => [c + eje.polo_alto_codigo, c + eje.polo_bajo_codigo]),
+  [''],
+)
+
 const PREGUNTAS = [
   {
     codigo: 'PROP-01',
@@ -52,6 +58,8 @@ export const MODELO_PUBLICADO = {
   preguntas: PREGUNTAS,
   niveles: [],
   ejes_perfil_cultural: EJES,
+  combinaciones_perfil_cultural: COMBINACIONES,
+  perfiles_cultura: [],
 }
 
 export const MODELO_BORRADOR = { ...MODELO_PUBLICADO, id: 'm-2', version: '2026.2', publicado: false }

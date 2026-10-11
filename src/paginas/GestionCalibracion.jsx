@@ -6,19 +6,23 @@ import { mensajeDeError } from '../servicios/api'
 import BaseConocimiento from '../componentes/BaseConocimiento.jsx'
 import EjesPerfilCultura from '../componentes/EjesPerfilCultura.jsx'
 import FormularioPregunta from '../componentes/FormularioPregunta.jsx'
+import PerfilesCultura from '../componentes/PerfilesCultura.jsx'
 import {
   agregarDimension,
   agregarEje,
+  agregarPerfilCultura,
   agregarPregunta,
   consultarModelo,
   crearNuevaVersion,
   desactivarPregunta,
   editarDimension,
   editarEje,
+  editarPerfilCultura,
   editarPregunta,
   listarModelos,
   publicarModelo,
   quitarDimension,
+  quitarPerfilCultura,
   reactivarPregunta,
   simularPesos,
 } from '../servicios/modelos'
@@ -407,6 +411,19 @@ function PestanaModelo({ estado }) {
             alGuardar={(codigo, cambios) => ejecutar(() => editarEje(modelo.id, codigo, cambios), `Eje ${codigo} actualizado.`)}
             alCrear={(eje) => ejecutar(() => agregarEje(modelo.id, eje), `Eje ${eje.nombre} configurado.`)}
             editable={Boolean(borrador)}
+            modelo={modelo}
+          />
+
+          <PerfilesCultura
+            alAgregar={async (perfil) =>
+              (await ejecutar(() => agregarPerfilCultura(modelo.id, perfil), `Perfil ${perfil.codigo} definido.`)) !== null
+            }
+            alEditar={async (codigo, cambios) =>
+              (await ejecutar(() => editarPerfilCultura(modelo.id, codigo, cambios), `Perfil ${codigo} actualizado.`)) !== null
+            }
+            alQuitar={(codigo) => ejecutar(() => quitarPerfilCultura(modelo.id, codigo), `Perfil ${codigo} quitado.`)}
+            editable={Boolean(borrador)}
+            error={mensaje.tipo === 'error' ? mensaje.texto : ''}
             modelo={modelo}
           />
 

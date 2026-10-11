@@ -294,6 +294,11 @@ export default function ContenidoInforme({ diagnostico, cuestionario, acciones =
           <span className="inline-block font-display-hero text-headline-xl text-primary font-bold tracking-widest bg-primary/10 px-4 py-1 rounded-lg" data-testid="perfil-codigo">
             {resultado.perfil_cultura.codigo}
           </span>
+          {resultado.perfil_cultura.nombre && (
+            <p className="font-headline-md text-headline-md text-on-surface font-bold mt-3" data-testid="perfil-nombre">
+              {resultado.perfil_cultura.nombre}
+            </p>
+          )}
           <p className="font-body-md text-body-md text-on-surface-variant leading-relaxed mt-3">
             {resultado.perfil_cultura.descripcion ?? 'La descripción del perfil todavía no está disponible.'}
           </p>
