@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import Aviso from '../componentes/Aviso.jsx'
+import { DialogoConfirmar, DialogoEdicion } from '../componentes/Dialogo.jsx'
 import { CLASE_ENTRADA } from '../componentes/TarjetaPublica.jsx'
 import { mensajeDeError } from '../servicios/api'
 import BaseConocimiento from '../componentes/BaseConocimiento.jsx'
@@ -220,6 +221,8 @@ function PestanaModelo({ estado }) {
   const [nueva, setNueva] = useState(DIMENSION_VACIA)
   // null = sin formulario; 'nueva' = alta; un código = edición de esa pregunta.
   const [edicion, setEdicion] = useState(null)
+  const [dimensionPorRenombrar, setDimensionPorRenombrar] = useState(null)
+  const [dimensionPorQuitar, setDimensionPorQuitar] = useState(null)
   const [guardandoPregunta, setGuardandoPregunta] = useState(false)
 
   useEffect(() => {
@@ -252,15 +255,15 @@ function PestanaModelo({ estado }) {
     }, 'Ponderación guardada. Se valida que sume 1 al publicar.')
   }
 
-  async function renombrar(d) {
-    const nombre = window.prompt('Nombre de la dimensión', d.nombre)
-    if (nombre === null || !nombre.trim() || nombre.trim() === d.nombre) return
-    await ejecutar(() => editarDimension(modelo.id, d.codigo, { nombre: nombre.trim() }), 'Dimensión renombrada.')
+  async function renombrar({ nombre }) {
+    const d = dimensionPorRenombrar
+    if (!nombre.trim() || nombre.trim() === d.nombre) return true
+    const hecho = await ejecutar(() => editarDimension(modelo.id, d.codigo, { nombre: nombre.trim() }), 'Dimensión renombrada.')
+    return hecho !== null
   }
 
-  async function quitar(d) {
-    const aviso = `¿Quitar la dimensión «${d.nombre}» de este borrador? Se elimina de la versión (no queda inactiva) y solo es posible si ya no tiene preguntas activas.`
-    if (!window.confirm(aviso)) return
+  async function quitar() {
+    const d = dimensionPorQuitar
     await ejecutar(() => quitarDimension(modelo.id, d.codigo), 'Dimensión quitada del borrador.')
   }
 
@@ -291,6 +294,24 @@ function PestanaModelo({ estado }) {
   return (
     <div className="flex flex-col gap-space-md">
       <Aviso tipo="error">{error}</Aviso>
+      {dimensionPorRenombrar && (
+        <DialogoEdicion
+          campos={[{ nombre: 'nombre', etiqueta: 'Nombre de la dimensión', valor: dimensionPorRenombrar.nombre, requerido: true }]}
+          error={mensaje.tipo === 'error' ? mensaje.texto : ''}
+          onCerrar={() => setDimensionPorRenombrar(null)}
+          onGuardar={renombrar}
+          titulo="Renombrar dimensión"
+        />
+      )}
+      {dimensionPorQuitar && (
+        <DialogoConfirmar
+          mensaje="Se elimina de la versión (no queda inactiva) y solo es posible si ya no tiene preguntas activas."
+          onCerrar={() => setDimensionPorQuitar(null)}
+          onConfirmar={quitar}
+          textoConfirmar="Quitar"
+          titulo={`¿Quitar la dimensión «${dimensionPorQuitar.nombre}» de este borrador?`}
+        />
+      )}
       <section className="bg-surface-container-lowest rounded-xl shadow-sm p-space-lg flex flex-col gap-3">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <SelectorModelo modeloId={modeloId} modelos={modelos} setModeloId={setModeloId} />
@@ -338,8 +359,8 @@ function PestanaModelo({ estado }) {
                   </label>
                   {borrador && (
                     <div className="flex gap-2">
-                      <button aria-label={`Renombrar ${d.nombre}`} className={BOTON} onClick={() => renombrar(d)} type="button">Renombrar</button>
-                      <button aria-label={`Quitar ${d.nombre}`} className={BOTON} onClick={() => quitar(d)} type="button">Quitar</button>
+                      <button aria-label={`Renombrar ${d.nombre}`} className={BOTON} onClick={() => setDimensionPorRenombrar(d)} type="button">Renombrar</button>
+                      <button aria-label={`Quitar ${d.nombre}`} className={BOTON} onClick={() => setDimensionPorQuitar(d)} type="button">Quitar</button>
                     </div>
                   )}
                 </div>
