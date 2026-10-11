@@ -154,7 +154,7 @@ export default function ContenidoInforme({ diagnostico, cuestionario, acciones =
               <h4 className="font-headline-sm text-headline-sm text-primary mb-1">Descripción del nivel</h4>
               <p className="font-body-md text-body-md text-on-surface-variant leading-relaxed">{resultado.nivel_descripcion}</p>
               <h4 className="font-headline-sm text-headline-sm text-primary mt-4 mb-1">Síntesis del diagnóstico</h4>
-              <p className="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+              <p className="font-body-md text-body-md text-on-surface-variant leading-relaxed whitespace-pre-line">
                 {sinNarrativa ? 'La síntesis del agente todavía no está disponible.' : resultado.sintesis}
               </p>
             </div>
@@ -276,7 +276,7 @@ export default function ContenidoInforme({ diagnostico, cuestionario, acciones =
 
                   <div className="bg-surface-container-low p-3 rounded-lg mb-3">
                     <span className="font-label-caps text-label-caps text-on-surface uppercase font-bold block mb-1">Hallazgo</span>
-                    <p className="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+                    <p className="font-body-sm text-body-sm text-on-surface-variant leading-relaxed whitespace-pre-line">
                       {d.observacion ?? 'Observación del agente pendiente.'}
                     </p>
                   </div>
@@ -299,7 +299,7 @@ export default function ContenidoInforme({ diagnostico, cuestionario, acciones =
               {resultado.perfil_cultura.nombre}
             </p>
           )}
-          <p className="font-body-md text-body-md text-on-surface-variant leading-relaxed mt-3">
+          <p className="font-body-md text-body-md text-on-surface-variant leading-relaxed mt-3 whitespace-pre-line">
             {resultado.perfil_cultura.descripcion ?? 'La descripción del perfil todavía no está disponible.'}
           </p>
         </div>
@@ -361,7 +361,7 @@ export default function ContenidoInforme({ diagnostico, cuestionario, acciones =
                   </span>
                 )}
                 <h5 className="font-headline-sm text-headline-sm text-on-surface">{r.titulo}</h5>
-                <p className="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">{r.contenido}</p>
+                <p className="font-body-sm text-body-sm text-on-surface-variant leading-relaxed whitespace-pre-line">{r.contenido}</p>
                 <span className="font-label-caps text-label-caps text-outline">{formatearFecha(r.creado_en)}</span>
               </div>
             ))}
