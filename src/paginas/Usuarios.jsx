@@ -424,7 +424,8 @@ function PestanaPermisos() {
     listarPermisos().then(setPermisos).catch(() => setPermisos([]))
   }, [recargar])
 
-  const modulos = [...new Set(permisos.map((p) => p.modulo))]
+  // Los módulos y los permisos se muestran con su nombre; el código es interno.
+  const modulos = [...new Map(permisos.map((p) => [p.modulo, { codigo: p.modulo, nombre: p.modulo_nombre ?? p.modulo }])).values()]
 
   return (
     <div className="flex flex-col gap-space-md">
@@ -447,7 +448,7 @@ function PestanaPermisos() {
           </thead>
           <tbody className="divide-y divide-surface-container">
             {modulos.map((modulo) => (
-              <FilasModulo ejecutar={ejecutar} key={modulo} modulo={modulo} permisos={permisos} roles={roles} />
+              <FilasModulo ejecutar={ejecutar} key={modulo.codigo} modulo={modulo} permisos={permisos} roles={roles} />
             ))}
           </tbody>
         </table>
@@ -460,12 +461,12 @@ function FilasModulo({ modulo, permisos, roles, ejecutar }) {
   return (
     <>
       <tr className="bg-surface-container-low/50">
-        <td className="py-2 px-4 font-label-caps text-label-caps uppercase text-secondary" colSpan={roles.length + 1}>{modulo}</td>
+        <td className="py-2 px-4 font-label-caps text-label-caps uppercase text-secondary" colSpan={roles.length + 1}>{modulo.nombre}</td>
       </tr>
-      {permisos.filter((p) => p.modulo === modulo).map((p) => (
+      {permisos.filter((p) => p.modulo === modulo.codigo).map((p) => (
         <tr key={p.codigo}>
           <td className="py-3 px-4">
-            <div className="font-label-lg text-label-lg">{p.codigo}</div>
+            <div className="font-label-lg text-label-lg">{p.nombre ?? p.codigo}</div>
             <div className="font-body-sm text-body-sm text-outline">{p.descripcion}</div>
           </td>
           {roles.map((r) => {
@@ -473,7 +474,7 @@ function FilasModulo({ modulo, permisos, roles, ejecutar }) {
             return (
               <td className="py-3 px-4 text-center" key={r.codigo}>
                 <input
-                  aria-label={`${r.nombre}: ${p.codigo}`}
+                  aria-label={`${r.nombre}: ${p.nombre ?? p.codigo}`}
                   checked={tiene}
                   className="w-4 h-4 accent-primary"
                   onChange={() =>
