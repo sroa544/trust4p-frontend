@@ -46,12 +46,20 @@ const USUARIO = {
   empresa_id: 'emp-1',
   activo: true,
 }
-const EMPRESA = { id: 'emp-1', nombre: 'Mateo SAS', numero_empleados: 30, activo: true }
+const EMPRESA = {
+  id: 'emp-1',
+  nombre: 'Mateo SAS',
+  nit: '900111222',
+  sector_codigo: 'servicios',
+  sector_nombre: 'Servicios profesionales',
+  numero_empleados: 30,
+  activo: true,
+}
 
 beforeEach(() => {
   vi.clearAllMocks()
   autenticacion.obtenerPerfil.mockResolvedValue({ ...PERFIL_REPRESENTANTE, rol_codigo: 'administrador' })
-  listarSectores.mockResolvedValue([])
+  listarSectores.mockResolvedValue([{ codigo: 'servicios', nombre: 'Servicios profesionales' }])
   administracion.listarUsuarios.mockResolvedValue([USUARIO])
   administracion.listarEmpresas.mockResolvedValue([EMPRESA])
   administracion.listarRoles.mockResolvedValue([])
@@ -157,7 +165,7 @@ describe('Edición de empresas', () => {
     await usuario.click(within(dialogo).getByRole('button', { name: 'Guardar' }))
 
     await waitFor(() =>
-      expect(administracion.editarEmpresa).toHaveBeenCalledWith('emp-1', { nombre: 'Mateo SAS', numero_empleados: 45 }),
+      expect(administracion.editarEmpresa).toHaveBeenCalledWith('emp-1', { numero_empleados: 45 }),
     )
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })

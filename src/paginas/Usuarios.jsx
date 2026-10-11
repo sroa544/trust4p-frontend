@@ -311,15 +311,15 @@ function PestanaEmpresas({ sectores, empresas, recargarEmpresas }) {
     if (ok) setNueva({ nit: '', nombre: '', sector: '', empleados: '', ciudad: '' })
   }
 
-  function editar({ nombre, empleados }) {
-    return ejecutar(
-      () =>
-        editarEmpresa(editando.id, {
-          nombre: nombre.trim(),
-          numero_empleados: empleados === '' ? undefined : Number(empleados),
-        }),
-      'Empresa actualizada.',
-    )
+  // Solo se envía lo que cambió; si no cambió nada, se cierra sin llamar al servidor.
+  function editar({ nombre, nit, sector, empleados }) {
+    const cambios = {}
+    if (nombre.trim() !== editando.nombre) cambios.nombre = nombre.trim()
+    if (nit.trim() !== (editando.nit ?? '') && nit.trim()) cambios.nit = nit.trim()
+    if (sector !== editando.sector_codigo) cambios.sector_codigo = sector
+    if (empleados !== '' && Number(empleados) !== editando.numero_empleados) cambios.numero_empleados = Number(empleados)
+    if (Object.keys(cambios).length === 0) return Promise.resolve(true)
+    return ejecutar(() => editarEmpresa(editando.id, cambios), 'Empresa actualizada.')
   }
 
   const visibles = empresas.filter((e) => !filtro || e.nombre.toLowerCase().includes(filtro.toLowerCase()))
@@ -401,6 +401,23 @@ function PestanaEmpresas({ sectores, empresas, recargarEmpresas }) {
         <DialogoEdicion
           campos={[
             { nombre: 'nombre', etiqueta: 'Nombre de la empresa', valor: editando.nombre, requerido: true },
+            // Una empresa que llegó sin NIT puede recibirlo; con NIT, no se puede dejar vacío.
+            { nombre: 'nit', etiqueta: 'NIT', valor: editando.nit ?? '', requerido: Boolean(editando.nit), maxLength: 20 },
+            {
+              nombre: 'sector',
+              etiqueta: 'Sector',
+              tipo: 'select',
+              valor: editando.sector_codigo ?? '',
+              requerido: true,
+              vacio: editando.sector_codigo ? undefined : 'Seleccione…',
+              // El catálogo activo; si el sector actual ya no está en él, se conserva como opción.
+              opciones: [
+                ...sectores.map((s) => ({ valor: s.codigo, texto: s.nombre })),
+                ...(editando.sector_codigo && !sectores.some((s) => s.codigo === editando.sector_codigo)
+                  ? [{ valor: editando.sector_codigo, texto: editando.sector_nombre }]
+                  : []),
+              ],
+            },
             { nombre: 'empleados', etiqueta: 'Número de empleados', valor: editando.numero_empleados ?? '', tipo: 'number', min: 1 },
           ]}
           error={mensaje.tipo === 'error' ? mensaje.texto : ''}
