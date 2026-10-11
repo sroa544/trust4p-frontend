@@ -25,19 +25,27 @@ function Json({ valor }) {
 }
 
 function Bitacora() {
-  const [filtros, setFiltros] = useState({ entidad: '', entidad_id: '', usuario_id: '', limite: 50 })
+  const [filtros, setFiltros] = useState({ entidad: '', entidad_id: '', usuario: '', limite: 50 })
+  const [usuarioBuscado, setUsuarioBuscado] = useState('')
   const [estado, setEstado] = useState({ fase: 'cargando', registros: [], error: '' })
+
+  // El usuario se busca por nombre o correo: se espera un instante tras la última
+  // tecla para no consultar en cada letra.
+  useEffect(() => {
+    const espera = setTimeout(() => setUsuarioBuscado(filtros.usuario.trim()), 300)
+    return () => clearTimeout(espera)
+  }, [filtros.usuario])
 
   useEffect(() => {
     let activo = true
     setEstado((previo) => ({ ...previo, fase: 'cargando' }))
-    consultarBitacora(filtros)
+    consultarBitacora({ entidad: filtros.entidad, entidad_id: filtros.entidad_id, limite: filtros.limite, usuario: usuarioBuscado })
       .then((registros) => activo && setEstado({ fase: 'listo', registros, error: '' }))
       .catch((falla) => activo && setEstado({ fase: 'error', registros: [], error: mensajeDeError(falla) }))
     return () => {
       activo = false
     }
-  }, [filtros])
+  }, [filtros.entidad, filtros.entidad_id, filtros.limite, usuarioBuscado])
 
   const cambiar = (campo) => (e) => setFiltros({ ...filtros, [campo]: e.target.value })
 
@@ -65,8 +73,13 @@ function Bitacora() {
             <input className={CLASE_ENTRADA} onChange={cambiar('entidad_id')} value={filtros.entidad_id} />
           </label>
           <label className="flex flex-col gap-1 font-label-md text-label-md">
-            Id del usuario
-            <input className={CLASE_ENTRADA} onChange={cambiar('usuario_id')} value={filtros.usuario_id} />
+            Usuario
+            <input
+              className={CLASE_ENTRADA}
+              onChange={cambiar('usuario')}
+              placeholder="Nombre o correo"
+              value={filtros.usuario}
+            />
           </label>
           <label className="flex flex-col gap-1 font-label-md text-label-md">
             Máximo de registros
@@ -105,7 +118,21 @@ function Bitacora() {
                 <div className="font-body-sm text-[11px] text-outline">{r.entidad_id ?? ''}</div>
               </td>
               <td className="py-3 px-4">{r.accion}</td>
-              <td className="py-3 px-4 font-body-sm text-[11px]">{r.usuario_id ?? 'Sistema'}</td>
+              <td className="py-3 px-4" title={r.usuario_id ?? undefined}>
+                {r.usuario_correo ? (
+                  <>
+                    <div className="font-label-md text-label-md">{r.usuario_nombre}</div>
+                    <div className="font-body-sm text-[11px] text-outline">{r.usuario_correo}</div>
+                  </>
+                ) : r.usuario_id ? (
+                  <>
+                    <div className="font-label-md text-label-md text-on-surface-variant">Usuario no disponible</div>
+                    <div className="font-body-sm text-[11px] text-outline">{r.usuario_id}</div>
+                  </>
+                ) : (
+                  'Sistema'
+                )}
+              </td>
               <td className="py-3 px-4"><Json valor={r.valores_anteriores} /></td>
               <td className="py-3 px-4"><Json valor={r.valores_nuevos} /></td>
             </tr>
