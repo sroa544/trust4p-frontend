@@ -86,7 +86,7 @@ export default function Diagnostico() {
         <p className="font-body-md text-body-md text-on-surface-variant">
           {cerrado
             ? 'Este ciclo de diagnóstico está cerrado; sus respuestas ya no pueden modificarse. Puede consultarlo en la evolución histórica de su organización.'
-            : 'Su empresa ya completó el cuestionario de este ciclo. Puede consultar el informe de resultados cuando quiera.'}
+            : 'Su empresa ya completó el cuestionario de este ciclo. Puede consultar el informe de resultados cuando quiera. Para realizar un nuevo diagnóstico, su consultor debe cerrar primero este ciclo.'}
         </p>
 
         <Link
