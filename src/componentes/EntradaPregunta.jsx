@@ -54,13 +54,14 @@ export default function EntradaPregunta({ pregunta, respuesta, onCambiar, deshab
                 value={opcion.codigo}
               />
               <div className="ml-3.5 flex-1">
-                <div className="flex flex-wrap items-center justify-between gap-2">
+                {/* La respuesta es el título de la opción; el código (N1, N2…) es interno. */}
+                <div className="flex flex-wrap items-start justify-between gap-2">
                   <span
-                    className={`font-headline-sm text-headline-sm font-bold ${
+                    className={`font-body-md text-body-md font-semibold ${
                       elegida ? 'text-primary' : 'text-on-surface'
                     }`}
                   >
-                    {opcion.codigo}
+                    {opcion.etiqueta}
                   </span>
                   <span
                     className={`font-label-caps text-label-caps font-bold ${
@@ -72,13 +73,6 @@ export default function EntradaPregunta({ pregunta, respuesta, onCambiar, deshab
                     {Number(opcion.valor)} pts
                   </span>
                 </div>
-                <p
-                  className={`font-body-md text-body-md mt-1 ${
-                    elegida ? 'text-on-surface' : 'text-on-surface-variant'
-                  }`}
-                >
-                  {opcion.etiqueta}
-                </p>
               </div>
             </label>
           )
