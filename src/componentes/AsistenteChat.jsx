@@ -1,25 +1,17 @@
 import { useEffect, useState } from 'react'
-import { useLocation } from 'react-router-dom'
 import { Fab, StylesheetProvider, Webchat, useWebchat } from '@botpress/webchat'
 import { useSesion } from '../hooks/useSesion'
 
 const CLIENTE = import.meta.env.VITE_BOTPRESS_CLIENT_ID
 
-const RUTAS_CON_ASISTENTE = [
-  '/diagnostico',
-  '/resultados',
-  '/plan',
-  '/historial',
-  '/auditoria',
-]
-
+// El asistente acompana toda pantalla con sesion iniciada, sin importar el
+// rol: una lista fija de rutas dejaba al consultor sin asistente en ninguna
+// de las suyas y al administrador solo en Auditoria. Las pantallas publicas
+// quedan excluidas por la comprobacion de sesion, no por la ruta.
 export default function AsistenteChat() {
-  const { pathname } = useLocation()
   const { estado, perfil } = useSesion()
 
-  const disponible = RUTAS_CON_ASISTENTE.some((ruta) => pathname.startsWith(ruta))
-
-  if (!CLIENTE || !disponible) return null
+  if (!CLIENTE) return null
   if (estado !== 'autenticado' || !perfil?.id) return null
 
   // Botpress guarda su identidad y su conversación bajo una clave de

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import TextoDelAgente from './TextoDelAgente.jsx'
 import {
   ETIQUETA_ORIGEN,
   LIENZO_BLOQUES,
@@ -154,9 +155,10 @@ export default function ContenidoInforme({ diagnostico, cuestionario, acciones =
               <h4 className="font-headline-sm text-headline-sm text-primary mb-1">Descripción del nivel</h4>
               <p className="font-body-md text-body-md text-on-surface-variant leading-relaxed">{resultado.nivel_descripcion}</p>
               <h4 className="font-headline-sm text-headline-sm text-primary mt-4 mb-1">Síntesis del diagnóstico</h4>
-              <p className="font-body-md text-body-md text-on-surface-variant leading-relaxed">
-                {sinNarrativa ? 'La síntesis del agente todavía no está disponible.' : resultado.sintesis}
-              </p>
+              <TextoDelAgente
+                clase="font-body-md text-body-md text-on-surface-variant leading-relaxed"
+                texto={sinNarrativa ? 'La síntesis del agente todavía no está disponible.' : resultado.sintesis}
+              />
             </div>
           </div>
 
@@ -276,9 +278,10 @@ export default function ContenidoInforme({ diagnostico, cuestionario, acciones =
 
                   <div className="bg-surface-container-low p-3 rounded-lg mb-3">
                     <span className="font-label-caps text-label-caps text-on-surface uppercase font-bold block mb-1">Hallazgo</span>
-                    <p className="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
-                      {d.observacion ?? 'Observación del agente pendiente.'}
-                    </p>
+                    <TextoDelAgente
+                      clase="font-body-sm text-body-sm text-on-surface-variant leading-relaxed"
+                      texto={d.observacion ?? 'Observación del agente pendiente.'}
+                    />
                   </div>
                 </div>
               </div>
@@ -299,9 +302,11 @@ export default function ContenidoInforme({ diagnostico, cuestionario, acciones =
               {resultado.perfil_cultura.nombre}
             </p>
           )}
-          <p className="font-body-md text-body-md text-on-surface-variant leading-relaxed mt-3">
-            {resultado.perfil_cultura.descripcion ?? 'La descripción del perfil todavía no está disponible.'}
-          </p>
+          <TextoDelAgente
+            clase="font-body-md text-body-md text-on-surface-variant leading-relaxed"
+            claseGrupo="mt-3"
+            texto={resultado.perfil_cultura.descripcion ?? 'La descripción del perfil todavía no está disponible.'}
+          />
         </div>
 
         <div className="lg:col-span-8 bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
@@ -361,7 +366,10 @@ export default function ContenidoInforme({ diagnostico, cuestionario, acciones =
                   </span>
                 )}
                 <h5 className="font-headline-sm text-headline-sm text-on-surface">{r.titulo}</h5>
-                <p className="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">{r.contenido}</p>
+                <TextoDelAgente
+                  clase="font-body-sm text-body-sm text-on-surface-variant leading-relaxed"
+                  texto={r.contenido}
+                />
                 <span className="font-label-caps text-label-caps text-outline">{formatearFecha(r.creado_en)}</span>
               </div>
             ))}

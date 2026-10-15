@@ -2,6 +2,7 @@ import { Link, useParams } from 'react-router-dom'
 import Aviso from '../componentes/Aviso.jsx'
 import RutaDeMejora from '../componentes/RutaDeMejora.jsx'
 import { ChipEstadoTarea, FechaLimite } from '../componentes/TareaPlan.jsx'
+import TextoDelAgente from '../componentes/TextoDelAgente.jsx'
 import { useResultado } from '../hooks/useResultado'
 import {
   ETIQUETA_ORIGEN,
@@ -112,9 +113,11 @@ export default function PlanEstrategico() {
                   </div>
                 </div>
 
-                <p className="font-body-md text-body-md text-on-surface-variant mb-3">
-                  {d.observacion ?? 'La observación del agente para esta dimensión todavía no está disponible.'}
-                </p>
+                <TextoDelAgente
+                  clase="font-body-md text-body-md text-on-surface-variant"
+                  claseGrupo="mb-3"
+                  texto={d.observacion ?? 'La observación del agente para esta dimensión todavía no está disponible.'}
+                />
 
                 {propias.length === 0 ? (
                   <p className="font-body-sm text-body-sm text-outline">Sin recomendaciones específicas para esta dimensión.</p>
@@ -132,7 +135,11 @@ export default function PlanEstrategico() {
                             </span>
                           </div>
                         </div>
-                        <p className="font-body-sm text-body-sm text-on-surface-variant mt-1 leading-relaxed">{r.contenido}</p>
+                        <TextoDelAgente
+                          clase="font-body-sm text-body-sm text-on-surface-variant leading-relaxed"
+                          claseGrupo="mt-1"
+                          texto={r.contenido}
+                        />
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="font-label-caps text-label-caps text-outline">{formatearFecha(r.creado_en)}</span>
                           <FechaLimite tarea={r} />
@@ -158,7 +165,11 @@ export default function PlanEstrategico() {
                     {r.origen === 'consultor' && r.autor_nombre ? ` · ${r.autor_nombre}` : ''}
                   </span>
                 </div>
-                <p className="font-body-md text-body-md text-on-surface-variant mt-1">{r.contenido}</p>
+                <TextoDelAgente
+                  clase="font-body-md text-body-md text-on-surface-variant"
+                  claseGrupo="mt-1"
+                  texto={r.contenido}
+                />
               </article>
             ))}
           </section>
