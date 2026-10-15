@@ -28,6 +28,19 @@ export const editarPerfilCultura = (id, codigo, cambios) =>
 export const quitarPerfilCultura = (id, codigo) =>
   solicitar(`/modelos-madurez/${id}/perfiles-cultura/${codigo}`, { metodo: 'DELETE' })
 
+// Rúbrica de niveles de madurez (RF-32): se parte de los 10 niveles estándar y se ajusta.
+export const aplicarRubricaEstandar = (id) =>
+  solicitar(`/modelos-madurez/${id}/niveles/estandar`, { metodo: 'POST' })
+
+export const agregarNivel = (id, nivel) =>
+  solicitar(`/modelos-madurez/${id}/niveles`, { metodo: 'POST', cuerpo: nivel })
+
+export const editarNivel = (id, numero, cambios) =>
+  solicitar(`/modelos-madurez/${id}/niveles/${numero}`, { metodo: 'PATCH', cuerpo: cambios })
+
+export const quitarNivel = (id, numero) =>
+  solicitar(`/modelos-madurez/${id}/niveles/${numero}`, { metodo: 'DELETE' })
+
 export const publicarModelo = (id) => solicitar(`/modelos-madurez/${id}/publicar`, { metodo: 'POST' })
 
 export const agregarDimension = (id, datos) =>
