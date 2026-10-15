@@ -1,5 +1,7 @@
 import { Link, useParams } from 'react-router-dom'
 import Aviso from '../componentes/Aviso.jsx'
+import RutaDeMejora from '../componentes/RutaDeMejora.jsx'
+import { ChipEstadoTarea, FechaLimite } from '../componentes/TareaPlan.jsx'
 import TextoDelAgente from '../componentes/TextoDelAgente.jsx'
 import { useResultado } from '../hooks/useResultado'
 import {
@@ -86,6 +88,8 @@ export default function PlanEstrategico() {
           </Link>
         </header>
 
+        <RutaDeMejora cuestionario={cuestionario} diagnostico={diagnostico} />
+
         <section className="flex flex-col gap-space-md">
           <h2 className="font-headline-lg text-headline-lg font-bold">Estado y siguiente paso por dimensión</h2>
 
@@ -123,17 +127,23 @@ export default function PlanEstrategico() {
                       <li className="bg-surface-container-lowest rounded-lg p-3" key={`${r.titulo}-${i}`}>
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <span className="font-headline-sm text-headline-sm">{r.titulo}</span>
-                          <span className="font-label-caps text-label-caps bg-surface-container px-2 py-0.5 rounded-full text-on-surface-variant">
-                            {ETIQUETA_ORIGEN[r.origen] ?? r.origen}
-                            {r.origen === 'consultor' && r.autor_nombre ? ` · ${r.autor_nombre}` : ''}
-                          </span>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <ChipEstadoTarea tarea={r} />
+                            <span className="font-label-caps text-label-caps bg-surface-container px-2 py-0.5 rounded-full text-on-surface-variant">
+                              {ETIQUETA_ORIGEN[r.origen] ?? r.origen}
+                              {r.origen === 'consultor' && r.autor_nombre ? ` · ${r.autor_nombre}` : ''}
+                            </span>
+                          </div>
                         </div>
                         <TextoDelAgente
                           clase="font-body-sm text-body-sm text-on-surface-variant leading-relaxed"
                           claseGrupo="mt-1"
                           texto={r.contenido}
                         />
-                        <span className="font-label-caps text-label-caps text-outline">{formatearFecha(r.creado_en)}</span>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-label-caps text-label-caps text-outline">{formatearFecha(r.creado_en)}</span>
+                          <FechaLimite tarea={r} />
+                        </div>
                       </li>
                     ))}
                   </ul>

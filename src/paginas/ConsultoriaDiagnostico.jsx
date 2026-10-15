@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import Aviso from '../componentes/Aviso.jsx'
 import ContenidoInforme from '../componentes/ContenidoInforme.jsx'
+import PlanDeMejoraConsultor from '../componentes/PlanDeMejoraConsultor.jsx'
 import { mensajeDeError } from '../servicios/api'
 import {
   cerrarDiagnostico,
@@ -120,8 +121,8 @@ function FormularioRecomendacion({ diagnosticoId, cuestionario, alRegistrar }) {
   )
 }
 
-// HU-021, HU-022 y HU-024: detalle de un diagnóstico asignado, recomendaciones
-// del consultor y cierre del acompañamiento.
+// HU-021, HU-022 y HU-024: detalle de un diagnóstico asignado, plan de mejora
+// (tareas) gestionado por el consultor y cierre del acompañamiento.
 export default function ConsultoriaDiagnostico() {
   const { id } = useParams()
   const [estado, setEstado] = useState({ fase: 'cargando', diagnostico: null, cuestionario: null, error: '' })
@@ -199,7 +200,11 @@ export default function ConsultoriaDiagnostico() {
 
         {admiteCambios && (
           <>
-            <FormularioRecomendacion alRegistrar={cargar} cuestionario={cuestionario} diagnosticoId={id} />
+            {diagnostico.estado === 'evaluado' && diagnostico.resultado ? (
+              <PlanDeMejoraConsultor alCambiar={cargar} cuestionario={cuestionario} diagnostico={diagnostico} />
+            ) : (
+              <FormularioRecomendacion alRegistrar={cargar} cuestionario={cuestionario} diagnosticoId={id} />
+            )}
 
             <section className="bg-surface-container-lowest rounded-xl shadow-sm p-space-lg flex flex-col gap-2">
               <h2 className="font-headline-md text-headline-md font-bold">Cerrar el diagnóstico</h2>

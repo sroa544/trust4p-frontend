@@ -80,7 +80,8 @@ describe('HU-014 · Puntaje por dimensión', () => {
     // Procesos 81.3 → nivel 4 (máximo) = fortaleza; Personas 40 → nivel 2 = foco de mejora.
     expect(screen.getAllByText('Fortaleza')).toHaveLength(1)
     expect(screen.getAllByText('Foco de mejora').length).toBeGreaterThanOrEqual(1)
-    expect(screen.getByText(/Reconocer a los equipos/i)).toBeInTheDocument()
+    // aparece en la ruta de mejora y en su dimensión
+    expect(screen.getAllByText(/Reconocer a los equipos/i).length).toBeGreaterThanOrEqual(1)
   })
 
   it('informa cuando la empresa todavía no tiene resultados', async () => {
