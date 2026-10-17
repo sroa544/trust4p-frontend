@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import Aviso from '../componentes/Aviso.jsx'
 import ContenidoInforme from '../componentes/ContenidoInforme.jsx'
+import { DialogoConfirmar } from '../componentes/Dialogo.jsx'
 import PlanDeMejoraConsultor from '../componentes/PlanDeMejoraConsultor.jsx'
 import { mensajeDeError } from '../servicios/api'
 import {
@@ -9,6 +10,7 @@ import {
   obtenerCuestionarioAsignado,
   obtenerDiagnosticoAsignado,
   registrarRecomendacion,
+  reprocesarDiagnostico,
 } from '../servicios/consultoria'
 import { formatearFechaHora } from '../servicios/validaciones'
 import { ESTADOS_DIAGNOSTICO } from './Consultoria.jsx'
@@ -129,6 +131,8 @@ export default function ConsultoriaDiagnostico() {
   const [confirmando, setConfirmando] = useState(false)
   const [errorCierre, setErrorCierre] = useState('')
   const [cerrando, setCerrando] = useState(false)
+  const [reprocesando, setReprocesando] = useState(false)
+  const [avisoReproceso, setAvisoReproceso] = useState({ tipo: 'info', texto: '' })
 
   const cargar = useCallback(async () => {
     try {
@@ -160,6 +164,20 @@ export default function ConsultoriaDiagnostico() {
     }
   }
 
+  async function reprocesar() {
+    setAvisoReproceso({ tipo: 'info', texto: '' })
+    try {
+      await reprocesarDiagnostico(id)
+      setAvisoReproceso({
+        tipo: 'exito',
+        texto: 'La evaluación se está reprocesando en segundo plano. Vuelva a abrir el diagnóstico en unos minutos.',
+      })
+      await cargar()
+    } catch (falla) {
+      setAvisoReproceso({ tipo: 'error', texto: mensajeDeError(falla) })
+    }
+  }
+
   if (estado.fase === 'cargando') {
     return <main className="w-full flex-1 flex items-center justify-center p-margin" role="status">Cargando el diagnóstico…</main>
   }
@@ -188,6 +206,8 @@ export default function ConsultoriaDiagnostico() {
           </span>
         </div>
 
+        <Aviso tipo={avisoReproceso.tipo}>{avisoReproceso.texto}</Aviso>
+
         {diagnostico.resultado ? (
           <ContenidoInforme cuestionario={cuestionario} conEnlacePlan={false} diagnostico={diagnostico} />
         ) : (
@@ -204,6 +224,19 @@ export default function ConsultoriaDiagnostico() {
               <PlanDeMejoraConsultor alCambiar={cargar} cuestionario={cuestionario} diagnostico={diagnostico} />
             ) : (
               <FormularioRecomendacion alRegistrar={cargar} cuestionario={cuestionario} diagnosticoId={id} />
+            )}
+
+            {diagnostico.estado === 'fallido' && (
+              <section className="bg-surface-container-lowest rounded-xl shadow-sm p-space-lg flex flex-col gap-2">
+                <h2 className="font-headline-md text-headline-md font-bold">Reprocesar la evaluación</h2>
+                <p className="font-body-sm text-body-sm text-on-surface-variant">
+                  La interpretación del agente no pudo generarse. Puede volver a intentarlo: el resultado numérico se
+                  recalcula y las recomendaciones que usted ya registró se conservan.
+                </p>
+                <button className="h-11 px-6 rounded-lg bg-surface-container text-on-surface font-label-lg text-label-lg font-semibold self-start" onClick={() => setReprocesando(true)} type="button">
+                  Reprocesar evaluación
+                </button>
+              </section>
             )}
 
             <section className="bg-surface-container-lowest rounded-xl shadow-sm p-space-lg flex flex-col gap-2">
@@ -230,6 +263,16 @@ export default function ConsultoriaDiagnostico() {
           </>
         )}
       </div>
+
+      {reprocesando && (
+        <DialogoConfirmar
+          mensaje="Se volverá a evaluar este diagnóstico. El resultado numérico se recalcula y la interpretación se genera en segundo plano."
+          onCerrar={() => setReprocesando(false)}
+          onConfirmar={reprocesar}
+          textoConfirmar="Reprocesar"
+          titulo="Reprocesar la evaluación"
+        />
+      )}
     </main>
   )
 }
