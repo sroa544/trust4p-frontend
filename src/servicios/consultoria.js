@@ -39,3 +39,10 @@ export const avanzarNivel = (diagnosticoId) =>
   solicitar(`/consultoria/diagnosticos/${diagnosticoId}/avanzar-nivel`, { metodo: 'POST' })
 
 export const cerrarDiagnostico = (id) => solicitar(`/diagnosticos/${id}/cerrar`, { metodo: 'POST' })
+
+// Evaluación asistida pendiente (el servicio de evaluación no respondió): se
+// vuelve a evaluar en segundo plano. El administrador puede con cualquier empresa
+// y el consultor con las que tiene asignadas; el lote es solo del administrador.
+export const reprocesarDiagnostico = (id) => solicitar(`/diagnosticos/${id}/reprocesar`, { metodo: 'POST' })
+
+export const reprocesarPendientes = () => solicitar('/diagnosticos/reprocesar-pendientes', { metodo: 'POST' })
