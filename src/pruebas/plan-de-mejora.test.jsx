@@ -409,3 +409,58 @@ describe('La empresa ve su ruta de mejora', () => {
     expect(screen.queryByTestId('ruta-de-mejora')).not.toBeInTheDocument()
   })
 })
+
+// ---------- nivel máximo de la rúbrica ----------
+
+describe('En el nivel máximo de la rúbrica', () => {
+  const CUESTIONARIO_4 = CUESTIONARIO // rúbrica de cuatro niveles
+  const enElTope = (tareas) =>
+    diagnostico(tareas, {
+      resultado: { ...DIAGNOSTICO_EVALUADO.resultado, nivel: 4 },
+      nivel_alcanzado: 4,
+    })
+
+  it('ninguna tarea apunta a un nivel que no existe', () => {
+    const d = enElTope([
+      tarea('1', 'Sin nivel', { nivel_objetivo: undefined }),
+      tarea('2', 'Con nivel 5', { nivel_objetivo: 5 }),
+    ])
+
+    expect(agruparPorNivel(d, 4).map((g) => [g.nivel, g.total])).toEqual([[4, 2]])
+  })
+
+  it('la empresa ve «Para sostener el nivel 4» y no «Para llegar al nivel 5»', () => {
+    render(<RutaDeMejora cuestionario={CUESTIONARIO_4} diagnostico={enElTope([tarea('1', 'Sostener la práctica', { nivel_objetivo: undefined })])} />)
+
+    expect(screen.getByText(/Para sostener el nivel 4/)).toBeInTheDocument()
+    expect(screen.queryByText(/nivel 5/)).not.toBeInTheDocument()
+  })
+
+  it('por debajo del tope el encabezado sigue siendo «Para llegar al nivel»', () => {
+    render(<RutaDeMejora cuestionario={CUESTIONARIO_4} diagnostico={diagnostico([tarea('1', 'Avanzar', { nivel_objetivo: 4 })])} />)
+
+    expect(screen.getByText(/Para llegar al nivel 4/)).toBeInTheDocument()
+    expect(screen.queryByText(/Para sostener/)).not.toBeInTheDocument()
+  })
+})
+
+describe('Diagnóstico con la evaluación pendiente', () => {
+  it('el consultor ve por qué no puede gestionar las tareas del plan', async () => {
+    consultoria.obtenerDiagnosticoAsignado.mockResolvedValue({
+      ...diagnostico([]),
+      estado: 'fallido',
+      motivo_fallo: 'El servicio de evaluación no respondió',
+    })
+    consultoria.obtenerCuestionarioAsignado.mockResolvedValue(CUESTIONARIO_10)
+    render(
+      <MemoryRouter initialEntries={['/consultoria/diagnosticos/diag-1']}>
+        <Routes>
+          <Route element={<ConsultoriaDiagnostico />} path="/consultoria/diagnosticos/:id" />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    expect(await screen.findByText(/se habilita cuando la evaluación se completa/)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Agregar tarea/ })).not.toBeInTheDocument()
+  })
+})

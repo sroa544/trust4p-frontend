@@ -10,6 +10,7 @@ import {
   avanceDelSiguienteNivel,
   estadoDe,
   nivelMaximo,
+  sostieneElNivel,
   nombreDeNivel,
 } from '../servicios/plan'
 import { formatearFecha } from '../servicios/validaciones'
@@ -31,7 +32,7 @@ export default function PlanDeMejoraConsultor({ diagnostico, cuestionario, alCam
 
   const niveles = cuestionario.niveles
   const maximo = nivelMaximo(niveles)
-  const grupos = agruparPorNivel(diagnostico)
+  const grupos = agruparPorNivel(diagnostico, maximo)
   const avance = avanceDelSiguienteNivel(diagnostico)
   const enMaximo = avance.actual >= maximo
   const puedeConfirmar = !enMaximo && avance.total > 0 && avance.completadas === avance.total
@@ -103,12 +104,12 @@ export default function PlanDeMejoraConsultor({ diagnostico, cuestionario, alCam
     {
       nombre: 'nivel_objetivo',
       etiqueta: 'Nivel al que ayuda a llegar',
-      valor: String(tarea.nivel_objetivo ?? avance.siguiente),
+      valor: String(Math.min(tarea.nivel_objetivo ?? avance.siguiente, maximo)),
       tipo: 'number',
       // Una tarea de un nivel ya confirmado conserva su valor; los cambios deben apuntar adelante.
-      min: Math.min(avance.actual + 1, tarea.nivel_objetivo ?? avance.siguiente),
+      min: Math.min(avance.actual + 1, tarea.nivel_objetivo ?? avance.siguiente, maximo),
       requerido: true,
-      ayuda: () => `Entre ${avance.actual + 1} y ${maximo}.`,
+      ayuda: () => `Entre ${Math.min(avance.actual + 1, maximo)} y ${maximo}.`,
     },
     {
       nombre: 'visible',
@@ -196,7 +197,9 @@ export default function PlanDeMejoraConsultor({ diagnostico, cuestionario, alCam
       {grupos.map((grupo) => (
         <div className="flex flex-col gap-2" key={grupo.nivel}>
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h3 className="font-headline-sm text-headline-sm font-bold">Para llegar al nivel {etiquetaNivel(grupo.nivel)}</h3>
+            <h3 className="font-headline-sm text-headline-sm font-bold">
+              {sostieneElNivel(grupo.nivel, avance.actual, maximo) ? 'Para sostener el nivel' : 'Para llegar al nivel'} {etiquetaNivel(grupo.nivel)}
+            </h3>
             <span className="font-label-md text-label-md text-on-surface-variant">
               {grupo.nivel <= avance.actual ? 'Nivel alcanzado · ' : ''}
               {grupo.completadas} de {grupo.total} completadas

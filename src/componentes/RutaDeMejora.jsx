@@ -1,12 +1,13 @@
 import { BarraDeProgreso, ChipEstadoTarea, FechaLimite } from './TareaPlan.jsx'
-import { agruparPorNivel, nombreDeNivel } from '../servicios/plan'
+import { agruparPorNivel, nivelMaximo, nombreDeNivel, sostieneElNivel } from '../servicios/plan'
 
 // Vista de la empresa del plan de mejora: las tareas que su consultor gestiona,
 // agrupadas por el nivel de madurez al que llevan. Solo lectura.
 export default function RutaDeMejora({ diagnostico, cuestionario }) {
-  const grupos = agruparPorNivel(diagnostico)
-  if (grupos.length === 0) return null
   const niveles = cuestionario.niveles
+  const maximo = nivelMaximo(niveles)
+  const grupos = agruparPorNivel(diagnostico, maximo)
+  if (grupos.length === 0) return null
   const nivelDelDiagnostico = diagnostico.resultado.nivel
   const actual = diagnostico.nivel_alcanzado ?? nivelDelDiagnostico
   const etiqueta = (n) => (nombreDeNivel(niveles, n) ? `${n} · ${nombreDeNivel(niveles, n)}` : String(n))
@@ -64,13 +65,15 @@ export default function RutaDeMejora({ diagnostico, cuestionario }) {
         const encabezado = (
           <div className="flex flex-col gap-1">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h3 className="font-headline-md text-headline-md font-bold">Para llegar al nivel {etiqueta(grupo.nivel)}</h3>
+              <h3 className="font-headline-md text-headline-md font-bold">
+                {sostieneElNivel(grupo.nivel, actual, maximo) ? 'Para sostener el nivel' : 'Para llegar al nivel'} {etiqueta(grupo.nivel)}
+              </h3>
               <span className="font-label-lg text-label-lg text-on-surface-variant">
                 {alcanzado ? 'Nivel alcanzado · ' : ''}
                 {grupo.completadas} de {grupo.total} completadas
               </span>
             </div>
-            <BarraDeProgreso completadas={grupo.completadas} etiqueta={`Progreso hacia el nivel ${grupo.nivel}`} total={grupo.total} />
+            <BarraDeProgreso completadas={grupo.completadas} etiqueta={`${sostieneElNivel(grupo.nivel, actual, maximo) ? 'Progreso para sostener' : 'Progreso hacia'} el nivel ${grupo.nivel}`} total={grupo.total} />
           </div>
         )
         return alcanzado ? (
