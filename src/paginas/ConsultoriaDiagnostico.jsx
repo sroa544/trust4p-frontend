@@ -231,7 +231,8 @@ export default function ConsultoriaDiagnostico() {
                 <h2 className="font-headline-md text-headline-md font-bold">Reprocesar la evaluación</h2>
                 <p className="font-body-sm text-body-sm text-on-surface-variant">
                   La interpretación del agente no pudo generarse. Puede volver a intentarlo: el resultado numérico se
-                  recalcula y las recomendaciones que usted ya registró se conservan.
+                  recalcula y las recomendaciones que usted ya registró se conservan. La gestión de las tareas del plan
+                  de mejora (estado, fecha y avance de nivel) se habilita cuando la evaluación se completa.
                 </p>
                 <button className="h-11 px-6 rounded-lg bg-surface-container text-on-surface font-label-lg text-label-lg font-semibold self-start" onClick={() => setReprocesando(true)} type="button">
                   Reprocesar evaluación

@@ -38,13 +38,21 @@ export const nombreDeNivel = (niveles, numero) => niveles.find((n) => n.numero =
 
 export const nivelMaximo = (niveles) => niveles.reduce((m, n) => Math.max(m, n.numero), 0)
 
+// Encabezado de un grupo de tareas: en el nivel máximo, con la empresa ya en él,
+// el objetivo es sostenerlo.
+export const sostieneElNivel = (nivel, actual, maximo) => maximo > 0 && nivel === maximo && actual >= maximo
+
 // Tareas agrupadas por el nivel al que llevan, del más bajo al más alto. Las que
 // no traen nivel (diagnósticos anteriores) apuntan al siguiente del diagnóstico.
-export function agruparPorNivel(diagnostico) {
+// Si se conoce el nivel máximo de la rúbrica, ninguna tarea apunta más allá: una
+// empresa que ya está en el tope trabaja para sostenerlo, no para llegar a uno
+// que no existe.
+export function agruparPorNivel(diagnostico, maximo = 0) {
   const base = (diagnostico.resultado?.nivel ?? 0) + 1
   const grupos = new Map()
   for (const tarea of diagnostico.recomendaciones) {
-    const nivel = tarea.nivel_objetivo ?? base
+    const pedido = tarea.nivel_objetivo ?? base
+    const nivel = maximo > 0 ? Math.min(pedido, maximo) : pedido
     if (!grupos.has(nivel)) grupos.set(nivel, [])
     grupos.get(nivel).push(tarea)
   }
